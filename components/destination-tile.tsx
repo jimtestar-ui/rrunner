@@ -46,11 +46,11 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth 
             textTransform: "uppercase",
           }}
         >
-          {destination.name}
+          {destination.nickname}
         </Text>
         {!ultraCompact ? (
           <Text numberOfLines={1} selectable style={{ color: "#ffffff", fontSize: compact ? 12 : 14 }}>
-            {destination.nickname}
+            {destination.name}
           </Text>
         ) : null}
         {reasonLabel ? (
