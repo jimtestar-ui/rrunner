@@ -1,0 +1,8 @@
+.expo/
+node_modules/
+expo-web.log
+expo-web.err.log
+*.log
+.env
+*.env
+!.env.example

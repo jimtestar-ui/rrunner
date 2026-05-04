@@ -1,0 +1,36 @@
+import { Destination } from "@/types/traffic";
+
+export const seedDestinations: Destination[] = [
+  {
+    id: "da-square",
+    name: "Da Square",
+    address: "232323 Apple Cherry Square, Detroit, MI, 48205",
+    nickname: "Da Square",
+    cardColor: "#594fd8",
+    isPriority: true,
+    status: "READY",
+    trafficColor: "RED",
+    delayMinutes: 20,
+    etaMinutes: 34,
+    normalMinutes: 14,
+    alternateRouteExists: false,
+    congestionSegments: [{ label: "JAM", startOffsetMeters: 1200, endOffsetMeters: 3900 }],
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "smooth-sailing",
+    name: "Destination Name",
+    address: "400 Market Street",
+    nickname: "Smooth Sailing",
+    cardColor: "#0b9db9",
+    isPriority: false,
+    status: "READY",
+    trafficColor: "GREEN",
+    delayMinutes: 5,
+    etaMinutes: 16,
+    normalMinutes: 11,
+    alternateRouteExists: true,
+    congestionSegments: [],
+    updatedAt: new Date().toISOString(),
+  },
+];

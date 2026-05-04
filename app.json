@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "RoadeRunner",
+    "slug": "roaderunner",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "roaderunner",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.roaderunner.driver",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "RoadeRunner uses your current location only when you refresh traffic for saved destinations."
+      }
+    },
+    "android": {
+      "package": "com.roaderunner.driver",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "RoadeRunner uses your current location only when you refresh traffic for saved destinations."
+        }
+      ]
+    ]
+  }
+}
