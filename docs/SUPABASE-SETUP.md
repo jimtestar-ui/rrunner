@@ -22,6 +22,8 @@ Use the publishable key, not the service role key. Never put the service role ke
 
 Then run `docs/supabase-phase1-auth.sql`. It adds the policy needed for the app to create a safe Free profile after sign-in.
 
+Run `docs/supabase-phase1-destination-sync.sql` before testing Save My Locations. It adds a safe sync key so tapping save twice updates the same saved locations instead of duplicating them.
+
 ## Auth Email Setup
 
 If the Supabase email tries to open `localhost:3000`, that is coming from Supabase Auth URL Configuration.

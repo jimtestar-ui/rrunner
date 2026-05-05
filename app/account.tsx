@@ -1,4 +1,5 @@
 import { BrandHeader } from "@/components/brand-header";
+import { useAppStore } from "@/lib/app-store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
@@ -6,10 +7,12 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function AccountScreen() {
+  const { state } = useAppStore();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [status, setStatus] = useState("Guest mode is on. Your locations stay on this device.");
+  const [syncStatus, setSyncStatus] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -84,6 +87,63 @@ export default function AccountScreen() {
     setStatus(profileError ? `Signed in, but profile setup failed: ${profileError}` : "Signed in. Next step is syncing saved locations.");
   }
 
+  async function handleSaveGuestLocations() {
+    if (!session?.user.id) {
+      setSyncStatus("Sign in first.");
+      return;
+    }
+
+    if (state.destinations.length === 0) {
+      setSyncStatus("No guest locations to save yet.");
+      return;
+    }
+
+    setLoading(true);
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("location_limit")
+      .eq("id", session.user.id)
+      .single();
+
+    const locationLimit = profile?.location_limit ?? 2;
+    const locationsToSave = state.destinations.slice(0, locationLimit);
+    const skippedCount = Math.max(0, state.destinations.length - locationsToSave.length);
+
+    if (profileError) {
+      setLoading(false);
+      setSyncStatus(`Plan check failed: ${profileError.message}`);
+      return;
+    }
+
+    const { error } = await supabase.from("destinations").upsert(
+      locationsToSave.map((destination) => ({
+        source_local_id: destination.id,
+        user_id: session.user.id,
+        name: destination.name,
+        nickname: destination.nickname,
+        address: destination.address,
+        place_id: destination.placeId,
+        latitude: destination.latitude,
+        longitude: destination.longitude,
+        card_color: destination.cardColor,
+        is_priority: destination.isPriority,
+      })),
+      { onConflict: "user_id,source_local_id" },
+    );
+    setLoading(false);
+
+    if (error) {
+      setSyncStatus(`Save failed: ${error.message}`);
+      return;
+    }
+
+    setSyncStatus(
+      skippedCount > 0
+        ? `Saved ${locationsToSave.length}. Upgrade to Pro to save the other ${skippedCount}.`
+        : `Saved ${locationsToSave.length} locations to your account.`,
+    );
+  }
+
   async function handleSignOut() {
     setLoading(true);
     await supabase.auth.signOut();
@@ -156,13 +216,38 @@ export default function AccountScreen() {
             </Pressable>
           </View>
         ) : (
-          <Pressable
-            onPress={handleSignOut}
-            disabled={loading}
-            style={{ alignItems: "center", borderColor: "#b42318", borderRadius: 8, borderWidth: 2, paddingVertical: 14 }}
-          >
-            <Text style={{ color: "#b42318", fontSize: 16, fontWeight: "900" }}>Sign Out</Text>
-          </Pressable>
+          <View style={{ gap: 12 }}>
+            <View style={{ backgroundColor: "#f1f1f1", borderRadius: 8, padding: 16, gap: 10 }}>
+              <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900" }}>
+                Save Guest Locations
+              </Text>
+              <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
+                Free accounts save 2 locations. Pro will save up to 10.
+              </Text>
+              <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
+                Guest locations on this device: {state.destinations.length}
+              </Text>
+              <Pressable
+                onPress={handleSaveGuestLocations}
+                disabled={loading}
+                style={{ alignItems: "center", backgroundColor: "#0b9db9", borderRadius: 8, paddingVertical: 14 }}
+              >
+                <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "900" }}>Save My Locations</Text>
+              </Pressable>
+              {syncStatus ? (
+                <Text selectable style={{ color: syncStatus.includes("failed") ? "#b42318" : "#5f6670", fontSize: 13 }}>
+                  {syncStatus}
+                </Text>
+              ) : null}
+            </View>
+            <Pressable
+              onPress={handleSignOut}
+              disabled={loading}
+              style={{ alignItems: "center", borderColor: "#b42318", borderRadius: 8, borderWidth: 2, paddingVertical: 14 }}
+            >
+              <Text style={{ color: "#b42318", fontSize: 16, fontWeight: "900" }}>Sign Out</Text>
+            </Pressable>
+          </View>
         )}
 
         <Pressable
