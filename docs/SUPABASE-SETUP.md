@@ -56,6 +56,17 @@ Use a template like this:
 
 The key piece is `{{ .Token }}`. If the template only uses `{{ .ConfirmationURL }}`, the email will only show a link.
 
+## Admin Tools Phase 1
+
+Run `docs/supabase-admin-tools-phase1.sql` in the Supabase SQL Editor.
+
+Then update your owner account email at the bottom of that SQL file and run that owner update statement once. This gives your account permission to use Owner Tools for:
+
+- viewing users
+- checking Free/Pro status
+- switching users between Free and Pro
+- confirming saved location limits
+
 ## First Data Model
 
 This creates the first product-ready foundation:
