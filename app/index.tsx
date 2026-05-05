@@ -86,6 +86,10 @@ export default function QuickScanScreen() {
           ))}
         </View>
 
+        <Text selectable style={{ color: "#5f6670", fontSize: 12, fontWeight: "800", textAlign: "center" }}>
+          Your last check was {formatFreshness(state.lastRefreshAt)}. Traffic info by {formatTrafficProvider(state.trafficDataSource)}
+        </Text>
+
         {count > 0 && sortedDestinations.length === 0 ? (
           <Text selectable style={{ color: "#b42318", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
             Saved locations need a refresh. Restart the app and try again.
@@ -129,13 +133,6 @@ export default function QuickScanScreen() {
             </View>
           )}
         </Pressable>
-        <Text
-          selectable
-          numberOfLines={1}
-          style={{ color: "#5f6670", fontSize: 11, fontWeight: "800", textAlign: "center" }}
-        >
-          Safe-stop refresh only | {formatFreshness(state.lastRefreshAt)} | {formatTrafficSource(state.trafficDataSource)}
-        </Text>
       </View>
     </View>
   );
@@ -143,32 +140,32 @@ export default function QuickScanScreen() {
 
 function formatFreshness(lastRefreshAt?: string) {
   if (!lastRefreshAt) {
-    return "Not checked yet";
+    return "not checked yet";
   }
 
   const elapsedMinutes = Math.floor((Date.now() - new Date(lastRefreshAt).getTime()) / 60000);
 
   if (elapsedMinutes < 1) {
-    return "Checked just now";
+    return "just now";
   }
 
   if (elapsedMinutes === 1) {
-    return "Checked 1 min ago";
+    return "1 min ago";
   }
 
-  return `Checked ${elapsedMinutes} min ago`;
+  return `${elapsedMinutes} min ago`;
 }
 
-function formatTrafficSource(source: "REAL" | "DEMO" | "UNKNOWN") {
+function formatTrafficProvider(source: "REAL" | "DEMO" | "UNKNOWN") {
   if (source === "REAL") {
-    return "Google traffic";
+    return "Google Maps";
   }
 
   if (source === "DEMO") {
-    return "Demo traffic";
+    return "demo mode";
   }
 
-  return "Traffic source not checked";
+  return "Google Maps";
 }
 
 function triggerRefreshFeedback(type: "success" | "warning") {
