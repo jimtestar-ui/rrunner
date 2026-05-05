@@ -6,6 +6,29 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+const primaryButton = {
+  alignItems: "center" as const,
+  backgroundColor: "#0b9db9",
+  borderRadius: 8,
+  paddingVertical: 14,
+};
+
+const outlineButton = {
+  alignItems: "center" as const,
+  borderColor: "#0b9db9",
+  borderRadius: 8,
+  borderWidth: 2,
+  paddingVertical: 14,
+};
+
+const dangerButton = {
+  alignItems: "center" as const,
+  borderColor: "#b42318",
+  borderRadius: 8,
+  borderWidth: 2,
+  paddingVertical: 14,
+};
+
 export default function AccountScreen() {
   const { state, replaceDestinations } = useAppStore();
   const [email, setEmail] = useState("");
@@ -226,10 +249,13 @@ export default function AccountScreen() {
             <Pressable
               onPress={handleSendCode}
               disabled={loading}
-              style={{ alignItems: "center", backgroundColor: "#0b9db9", borderRadius: 8, paddingVertical: 14 }}
+              style={({ pressed }) => [
+                primaryButton,
+                (pressed || loading) && { opacity: 0.65, transform: [{ scale: 0.99 }] },
+              ]}
             >
               <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "900" }}>
-                Send Sign-In Code
+                {loading ? "Sending..." : "Send Sign-In Code"}
               </Text>
             </Pressable>
             <TextInput
@@ -242,10 +268,13 @@ export default function AccountScreen() {
             <Pressable
               onPress={handleVerifyCode}
               disabled={loading}
-              style={{ alignItems: "center", borderColor: "#0b9db9", borderRadius: 8, borderWidth: 2, paddingVertical: 14 }}
+              style={({ pressed }) => [
+                outlineButton,
+                (pressed || loading) && { opacity: 0.65, transform: [{ scale: 0.99 }] },
+              ]}
             >
               <Text style={{ color: "#0b9db9", fontSize: 16, fontWeight: "900" }}>
-                Verify Code
+                {loading ? "Checking..." : "Verify Code"}
               </Text>
             </Pressable>
           </View>
@@ -264,9 +293,14 @@ export default function AccountScreen() {
               <Pressable
                 onPress={handleSaveGuestLocations}
                 disabled={loading}
-                style={{ alignItems: "center", backgroundColor: "#0b9db9", borderRadius: 8, paddingVertical: 14 }}
+                style={({ pressed }) => [
+                  primaryButton,
+                  (pressed || loading) && { opacity: 0.65, transform: [{ scale: 0.99 }] },
+                ]}
               >
-                <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "900" }}>Save My Locations</Text>
+                <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "900" }}>
+                  {loading ? "Saving..." : "Save My Locations"}
+                </Text>
               </Pressable>
               {syncStatus ? (
                 <Text selectable style={{ color: syncStatus.includes("failed") ? "#b42318" : "#5f6670", fontSize: 13 }}>
@@ -277,16 +311,24 @@ export default function AccountScreen() {
             <Pressable
               onPress={handleSignOut}
               disabled={loading}
-              style={{ alignItems: "center", borderColor: "#b42318", borderRadius: 8, borderWidth: 2, paddingVertical: 14 }}
+              style={({ pressed }) => [
+                dangerButton,
+                (pressed || loading) && { opacity: 0.65, transform: [{ scale: 0.99 }] },
+              ]}
             >
-              <Text style={{ color: "#b42318", fontSize: 16, fontWeight: "900" }}>Sign Out</Text>
+              <Text style={{ color: "#b42318", fontSize: 16, fontWeight: "900" }}>
+                {loading ? "Signing Out..." : "Sign Out"}
+              </Text>
             </Pressable>
           </View>
         )}
 
         <Pressable
           onPress={() => router.replace("/")}
-          style={{ alignItems: "center", backgroundColor: "#0b9db9", borderRadius: 8, paddingVertical: 16 }}
+          style={({ pressed }) => [
+            { ...primaryButton, paddingVertical: 16 },
+            pressed && { opacity: 0.65, transform: [{ scale: 0.99 }] },
+          ]}
         >
           <Text style={{ color: "#ffffff", fontSize: 17, fontWeight: "900" }}>Return to Main Screen</Text>
         </Pressable>
