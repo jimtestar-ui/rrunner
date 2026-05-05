@@ -15,7 +15,10 @@
     },
     "android": {
       "package": "com.roaderunner.driver",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -24,7 +27,8 @@
         {
           "locationWhenInUsePermission": "RoadeRunner uses your current location only when you refresh traffic for saved destinations."
         }
-      ]
+      ],
+      "expo-sqlite"
     ]
   }
 }
