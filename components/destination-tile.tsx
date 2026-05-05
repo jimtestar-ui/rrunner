@@ -21,7 +21,7 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
   const delay = destination.delayMinutes === null ? "--" : `+ ${destination.delayMinutes} MIN`;
   const backgroundColor = destination.cardColor || "#0b9db9";
   const dotColor = dotColors[destination.trafficColor] ?? dotColors.UNKNOWN;
-  const reasonLabel = getReasonLabel(destination);
+  const reasonLabel = showQuip ? getWittyLabel(destination) : getDefaultLabel(destination);
 
   return (
     <Pressable
@@ -61,7 +61,7 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
             {destination.name}
           </Text>
         ) : null}
-        {showQuip && reasonLabel ? (
+        {reasonLabel ? (
           <Text numberOfLines={1} selectable style={{ color: "#ffffff", fontSize: compact ? 11 : 12, fontWeight: "800" }}>
             {reasonLabel}
           </Text>
@@ -105,13 +105,37 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
   );
 }
 
-function getReasonLabel(destination: Destination) {
+function getDefaultLabel(destination: Destination) {
   if (destination.status === "STALE") {
     return "Old Intel";
   }
 
   if (destination.trafficColor === "UNKNOWN") {
-    return "Check needed";
+    return "Check Needed";
+  }
+
+  if (destination.trafficColor === "GREEN") {
+    return "Smooth Sailing";
+  }
+
+  if (destination.trafficColor === "YELLOW") {
+    return "Alt Route";
+  }
+
+  if (destination.trafficColor === "RED") {
+    return "Jam";
+  }
+
+  return "";
+}
+
+function getWittyLabel(destination: Destination) {
+  if (destination.status === "STALE") {
+    return "Old Intel";
+  }
+
+  if (destination.trafficColor === "UNKNOWN") {
+    return "Check Needed";
   }
 
   if (destination.trafficColor === "GREEN") {
