@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function AccountScreen() {
-  const { state } = useAppStore();
+  const { state, replaceDestinations } = useAppStore();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [session, setSession] = useState<Session | null>(null);
@@ -115,21 +115,30 @@ export default function AccountScreen() {
       return;
     }
 
+    const savedDestinations = locationsToSave.map((destination) => ({
+      source_local_id: destination.id,
+      user_id: session.user.id,
+      name: destination.name,
+      nickname: destination.nickname,
+      address: destination.address,
+      place_id: destination.placeId,
+      latitude: destination.latitude,
+      longitude: destination.longitude,
+      card_color: destination.cardColor,
+      is_priority: destination.isPriority,
+    }));
+
     const { error } = await supabase.from("destinations").upsert(
-      locationsToSave.map((destination) => ({
-        source_local_id: destination.id,
-        user_id: session.user.id,
-        name: destination.name,
-        nickname: destination.nickname,
-        address: destination.address,
-        place_id: destination.placeId,
-        latitude: destination.latitude,
-        longitude: destination.longitude,
-        card_color: destination.cardColor,
-        is_priority: destination.isPriority,
-      })),
+      savedDestinations,
       { onConflict: "user_id,source_local_id" },
     );
+    const { data: accountDestinations, error: loadError } = error
+      ? { data: null, error: null }
+      : await supabase
+          .from("destinations")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: true });
     setLoading(false);
 
     if (error) {
@@ -137,6 +146,31 @@ export default function AccountScreen() {
       return;
     }
 
+    if (loadError) {
+      setSyncStatus(`Saved, but reload failed: ${loadError.message}`);
+      return;
+    }
+
+    replaceDestinations(
+      (accountDestinations ?? []).map((destination, index) => ({
+        id: destination.source_local_id ?? destination.id,
+        name: destination.name,
+        address: destination.address,
+        placeId: destination.place_id ?? undefined,
+        latitude: destination.latitude ?? undefined,
+        longitude: destination.longitude ?? undefined,
+        nickname: destination.nickname,
+        cardColor: destination.card_color ?? "#0b9db9",
+        isPriority: destination.is_priority ?? false,
+        status: "IDLE",
+        trafficColor: "UNKNOWN",
+        delayMinutes: null,
+        etaMinutes: null,
+        normalMinutes: null,
+        alternateRouteExists: null,
+        congestionSegments: [],
+      })),
+    );
     setSyncStatus(
       skippedCount > 0
         ? `Saved ${locationsToSave.length}. Upgrade to Pro to save the other ${skippedCount}.`

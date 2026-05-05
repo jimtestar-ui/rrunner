@@ -24,6 +24,7 @@ interface AppStore {
     >,
   ) => boolean;
   deleteDestination: (destinationId: string) => boolean;
+  replaceDestinations: (destinations: Destination[]) => void;
   updateThresholds: (thresholds: Traffic_Threshold) => void;
   setPlanType: (planType: PlanType) => void;
   addBetaTester: (email: string, planType: PlanType) => boolean;
@@ -206,6 +207,17 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     return didDelete;
   }
 
+  function replaceDestinations(destinations: Destination[]) {
+    setStateInternal((currentState) => {
+      const nextState = {
+        ...currentState,
+        destinations,
+      };
+      persistState(nextState);
+      return nextState;
+    });
+  }
+
   function updateThresholds(Traffic_Threshold: Traffic_Threshold) {
     setState({ ...state, Traffic_Threshold });
   }
@@ -303,6 +315,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       addDestination,
       updateDestination,
       deleteDestination,
+      replaceDestinations,
       updateThresholds,
       setPlanType,
       addBetaTester,
