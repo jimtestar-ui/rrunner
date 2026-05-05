@@ -57,17 +57,11 @@ export default function QuickScanScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <BrandHeader />
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 10, gap: 10, paddingBottom: 18 }}>
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 10, gap: 10, paddingBottom: 130 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 2 }}>
           <View>
             <Text selectable style={{ color: "#24282b", fontSize: 13, fontWeight: "800" }}>
               {count} / {state.plan.locationLimit} locations
-            </Text>
-            <Text selectable style={{ color: "#5f6670", fontSize: 12, fontWeight: "700" }}>
-              {formatFreshness(state.lastRefreshAt)}
-            </Text>
-            <Text selectable style={{ color: "#5f6670", fontSize: 11, fontWeight: "700" }}>
-              {formatTrafficSource(state.trafficDataSource)}
             </Text>
           </View>
           <Link href="/add-destination" asChild>
@@ -132,6 +126,12 @@ export default function QuickScanScreen() {
         </Pressable>
         <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
           Tap refresh to check your location once before you commit.
+        </Text>
+        <Text selectable style={{ color: "#24282b", fontSize: 12, fontWeight: "900", textAlign: "center" }}>
+          {formatFreshness(state.lastRefreshAt)}
+        </Text>
+        <Text selectable style={{ color: "#5f6670", fontSize: 11, fontWeight: "800", textAlign: "center" }}>
+          {formatTrafficSource(state.trafficDataSource)}
         </Text>
       </View>
     </View>

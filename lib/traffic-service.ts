@@ -37,7 +37,7 @@ async function getDriverLocation(): Promise<Driver_Location | "USER_ACTION_REQUI
   }
 
   const timeout = new Promise<"TIMEOUT">((resolve) => {
-    setTimeout(() => resolve("TIMEOUT"), 4500);
+    setTimeout(() => resolve("TIMEOUT"), 8000);
   });
 
   const locationPromise = Location.getCurrentPositionAsync({
@@ -124,9 +124,9 @@ export async function refreshAllTraffic(state: AppState): Promise<AppState> {
       destinations: state.destinations.map((destination) => ({
         ...destination,
         status: destination.lastKnownGood ? "STALE" : "UNKNOWN",
-        warning: "Location timed out. Showing last known result.",
+        warning: "Location took too long. Try refresh again from a safe stop.",
       })),
-      errorMessage: "Location timed out.",
+      errorMessage: "Location took too long. Try refresh again from a safe stop.",
     };
   }
 
@@ -191,7 +191,7 @@ export const errorHandlingMatrix = [
   },
   {
     event: "Location Timeout",
-    appReaction: "Show old checks, keep the previous result, ask the driver to refresh again.",
+    appReaction: "Show old checks, keep the previous result, ask the driver to refresh again from a safe stop.",
   },
   {
     event: "0 Alternate Routes",
