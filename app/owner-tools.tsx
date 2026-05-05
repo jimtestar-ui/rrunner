@@ -1,5 +1,6 @@
 import { BrandHeader } from "@/components/brand-header";
 import { useAppStore } from "@/lib/app-store";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { PlanType } from "@/types/traffic";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -10,6 +11,7 @@ export default function OwnerToolsScreen() {
   const [email, setEmail] = useState("");
   const [testerPlan, setTesterPlan] = useState<PlanType>("PRO");
   const [trafficServiceUrl, setTrafficServiceUrl] = useState(state.trafficServiceUrl);
+  const [supabaseStatus, setSupabaseStatus] = useState("Not checked");
 
   function handleAddTester() {
     const didAdd = addBetaTester(email, testerPlan);
@@ -20,6 +22,23 @@ export default function OwnerToolsScreen() {
     }
 
     setEmail("");
+  }
+
+  async function handleSupabaseCheck() {
+    if (!isSupabaseConfigured) {
+      setSupabaseStatus("Missing Supabase URL or publishable key in .env.");
+      return;
+    }
+
+    setSupabaseStatus("Checking...");
+    const { error } = await supabase.from("profiles").select("id").limit(1);
+
+    if (error) {
+      setSupabaseStatus(`Connection failed: ${error.message}`);
+      return;
+    }
+
+    setSupabaseStatus("Connected to Supabase.");
   }
 
   return (
@@ -99,6 +118,24 @@ export default function OwnerToolsScreen() {
           </Pressable>
           <Text selectable style={{ color: "#5f6670", fontSize: 12 }}>
             Current: {state.trafficServiceUrl}
+          </Text>
+        </View>
+
+        <View style={{ backgroundColor: "#f1f1f1", borderRadius: 8, padding: 16, gap: 12 }}>
+          <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900" }}>
+            Supabase Connection
+          </Text>
+          <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
+            Confirms this app can reach your RoadeRunner Supabase project.
+          </Text>
+          <Pressable
+            onPress={handleSupabaseCheck}
+            style={{ alignItems: "center", backgroundColor: "#0b9db9", borderRadius: 8, paddingVertical: 14 }}
+          >
+            <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "900" }}>Check Supabase</Text>
+          </Pressable>
+          <Text selectable style={{ color: supabaseStatus.includes("failed") || supabaseStatus.includes("Missing") ? "#b42318" : "#5f6670", fontSize: 12 }}>
+            {supabaseStatus}
           </Text>
         </View>
 
