@@ -342,7 +342,21 @@ async function ensureProfile(userId?: string, email?: string) {
     return "Missing user id.";
   }
 
-  const { error } = await supabase.from("profiles").upsert({
+  const { data: existingProfile, error: readError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (readError) {
+    return readError.message;
+  }
+
+  if (existingProfile) {
+    return undefined;
+  }
+
+  const { error } = await supabase.from("profiles").insert({
     id: userId,
     email,
     plan_type: "FREE",
