@@ -1,6 +1,7 @@
 import { BrandHeader } from "@/components/brand-header";
 import { useAppStore } from "@/lib/app-store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { Destination } from "@/types/traffic";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -10,6 +11,19 @@ type AccountProfile = {
   plan_type: string;
   location_limit: number;
   is_admin: boolean;
+};
+
+type AccountDestinationRow = {
+  id: string;
+  source_local_id: string | null;
+  name: string;
+  address: string;
+  place_id: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  nickname: string;
+  card_color: string | null;
+  is_priority: boolean | null;
 };
 
 const primaryButton = {
@@ -52,6 +66,9 @@ export default function AccountScreen() {
       setEmail(data.session?.user.email ?? "");
       if (data.session?.user.id) {
         loadProfile(data.session.user.id);
+        if (state.destinationAccountUserId && state.destinationAccountUserId !== data.session.user.id) {
+          loadAccountDestinations(data.session.user.id);
+        }
       }
     });
 
@@ -60,8 +77,12 @@ export default function AccountScreen() {
       setEmail(nextSession?.user.email ?? "");
       if (nextSession?.user.id) {
         loadProfile(nextSession.user.id);
+        if (state.destinationAccountUserId && state.destinationAccountUserId !== nextSession.user.id) {
+          loadAccountDestinations(nextSession.user.id);
+        }
       } else {
         setProfile(null);
+        replaceDestinations([], null);
       }
     });
 
@@ -81,6 +102,22 @@ export default function AccountScreen() {
     if (error) {
       setStatus(`Plan check failed: ${error.message}`);
     }
+  }
+
+  async function loadAccountDestinations(userId: string) {
+    const { data, error } = await supabase
+      .from("destinations")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      setSyncStatus(`Location reload failed: ${error.message}`);
+      replaceDestinations([], userId);
+      return;
+    }
+
+    replaceDestinations((data ?? []).map(mapAccountDestination), userId);
   }
 
   async function handleSendCode() {
@@ -215,24 +252,8 @@ export default function AccountScreen() {
     }
 
     replaceDestinations(
-      (accountDestinations ?? []).map((destination, index) => ({
-        id: destination.source_local_id ?? destination.id,
-        name: destination.name,
-        address: destination.address,
-        placeId: destination.place_id ?? undefined,
-        latitude: destination.latitude ?? undefined,
-        longitude: destination.longitude ?? undefined,
-        nickname: destination.nickname,
-        cardColor: destination.card_color ?? "#0b9db9",
-        isPriority: destination.is_priority ?? false,
-        status: "IDLE",
-        trafficColor: "UNKNOWN",
-        delayMinutes: null,
-        etaMinutes: null,
-        normalMinutes: null,
-        alternateRouteExists: null,
-        congestionSegments: [],
-      })),
+      (accountDestinations ?? []).map(mapAccountDestination),
+      session.user.id,
     );
     setSyncStatus(
       skippedCount > 0
@@ -246,6 +267,7 @@ export default function AccountScreen() {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    replaceDestinations([], null);
     setLoading(false);
     setStatus("Signed out. Guest mode is on.");
   }
@@ -411,6 +433,27 @@ export default function AccountScreen() {
       </ScrollView>
     </View>
   );
+}
+
+function mapAccountDestination(destination: AccountDestinationRow): Destination {
+  return {
+    id: destination.source_local_id ?? destination.id,
+    name: destination.name,
+    address: destination.address,
+    placeId: destination.place_id ?? undefined,
+    latitude: destination.latitude ?? undefined,
+    longitude: destination.longitude ?? undefined,
+    nickname: destination.nickname,
+    cardColor: destination.card_color ?? "#0b9db9",
+    isPriority: destination.is_priority ?? false,
+    status: "IDLE",
+    trafficColor: "UNKNOWN",
+    delayMinutes: null,
+    etaMinutes: null,
+    normalMinutes: null,
+    alternateRouteExists: null,
+    congestionSegments: [],
+  };
 }
 
 async function ensureProfile(userId?: string, email?: string) {

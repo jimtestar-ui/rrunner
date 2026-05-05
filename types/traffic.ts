@@ -84,6 +84,7 @@ export interface AppState {
   Driver_Location: Driver_Location | null;
   Traffic_Threshold: Traffic_Threshold;
   destinations: Destination[];
+  destinationAccountUserId?: string | null;
   plan: Plan;
   betaTesters: BetaTester[];
   trafficCheckLogs: TrafficCheckLog[];

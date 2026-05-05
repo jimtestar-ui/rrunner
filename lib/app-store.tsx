@@ -24,7 +24,7 @@ interface AppStore {
     >,
   ) => boolean;
   deleteDestination: (destinationId: string) => boolean;
-  replaceDestinations: (destinations: Destination[]) => void;
+  replaceDestinations: (destinations: Destination[], destinationAccountUserId?: string | null) => void;
   updateThresholds: (thresholds: Traffic_Threshold) => void;
   setPlanType: (planType: PlanType) => void;
   addBetaTester: (email: string, planType: PlanType) => boolean;
@@ -38,6 +38,7 @@ const initialState: AppState = {
   Driver_Location: null,
   Traffic_Threshold: { greenMaxMinutes: 5, redOverMinutes: 15 },
   destinations: seedDestinations,
+  destinationAccountUserId: null,
   plan: PLANS.FREE,
   betaTesters: [],
   trafficCheckLogs: [],
@@ -65,6 +66,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
               parsed.trafficServiceUrl ?? process.env.EXPO_PUBLIC_TRAFFIC_SERVICE_URL ?? "http://localhost:8787",
             trafficDataSource: parsed.trafficDataSource ?? "UNKNOWN",
             wittyModeEnabled: parsed.wittyModeEnabled ?? false,
+            destinationAccountUserId: parsed.destinationAccountUserId ?? null,
             Traffic_Threshold: {
               greenMaxMinutes: parsed.Traffic_Threshold.greenMaxMinutes ?? 5,
               redOverMinutes:
@@ -148,6 +150,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
 
       didAdd = true;
       const nextState = { ...currentState, destinations: [...currentState.destinations, nextDestination] };
+      nextState.destinationAccountUserId = null;
       persistState(nextState);
       return nextState;
     });
@@ -207,11 +210,12 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     return didDelete;
   }
 
-  function replaceDestinations(destinations: Destination[]) {
+  function replaceDestinations(destinations: Destination[], destinationAccountUserId: string | null = null) {
     setStateInternal((currentState) => {
       const nextState = {
         ...currentState,
         destinations,
+        destinationAccountUserId,
       };
       persistState(nextState);
       return nextState;
