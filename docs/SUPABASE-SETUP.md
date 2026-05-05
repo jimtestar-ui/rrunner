@@ -22,6 +22,22 @@ Use the publishable key, not the service role key. Never put the service role ke
 
 Then run `docs/supabase-phase1-auth.sql`. It adds the policy needed for the app to create a safe Free profile after sign-in.
 
+## Auth Email Setup
+
+If the Supabase email tries to open `localhost:3000`, that is coming from Supabase Auth URL Configuration.
+
+For this Phase 1 beta, use the email code in the app and ignore the link.
+
+Recommended Supabase settings:
+
+1. Go to Authentication > URL Configuration.
+2. Change Site URL from `http://localhost:3000` to your deployed app or website URL when available.
+3. Add redirect URLs for development if you want links to work later:
+   - `http://localhost:19006/**`
+   - your Vercel URL, for example `https://your-project.vercel.app/**`
+
+For the current app flow, the important part is the one-time code. In Authentication > Email Templates, make sure the sign-in email includes `{{ .Token }}` so users can copy the code into RoadeRunner.
+
 ## First Data Model
 
 This creates the first product-ready foundation:

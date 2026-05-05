@@ -53,7 +53,7 @@ export default function AccountScreen() {
       return;
     }
 
-    setStatus("Check your email for the sign-in code.");
+    setStatus("Check your email for the code. Type the code here; do not tap the localhost link.");
   }
 
   async function handleVerifyCode() {
@@ -117,6 +117,9 @@ export default function AccountScreen() {
 
         {!session ? (
           <View style={{ gap: 12 }}>
+            <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800" }}>
+              Supabase may include a sign-in link in the email. For this beta, use the code instead.
+            </Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
