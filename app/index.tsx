@@ -59,16 +59,14 @@ export default function QuickScanScreen() {
       <BrandHeader />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 10, gap: 10, paddingBottom: 130 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 2 }}>
-          <View>
-            <Text selectable style={{ color: "#24282b", fontSize: 13, fontWeight: "800" }}>
-              {count} / {state.plan.locationLimit} locations
-            </Text>
-          </View>
           <Link href="/add-destination" asChild>
             <Pressable>
               <Text style={{ color: "#0799b7", fontSize: 14, fontWeight: "900" }}>ADD LOCATION</Text>
             </Pressable>
           </Link>
+          <Text selectable style={{ color: "#24282b", fontSize: 13, fontWeight: "800", textAlign: "right" }}>
+            {count} / {state.plan.locationLimit} locations
+          </Text>
         </View>
 
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
