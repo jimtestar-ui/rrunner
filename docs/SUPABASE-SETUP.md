@@ -36,7 +36,23 @@ Recommended Supabase settings:
    - `http://localhost:19006/**`
    - your Vercel URL, for example `https://your-project.vercel.app/**`
 
-For the current app flow, the important part is the one-time code. In Authentication > Email Templates, make sure the sign-in email includes `{{ .Token }}` so users can copy the code into RoadeRunner.
+For the current app flow, the important part is the one-time code. Supabase sends the Magic Link template for `signInWithOtp`, so update that template.
+
+Go to Authentication > Email Templates > Magic Link.
+
+Use a template like this:
+
+```html
+<h2>Your RoadeRunner sign-in code</h2>
+
+<p>Enter this code in RoadeRunner:</p>
+
+<p style="font-size: 28px; font-weight: 700; letter-spacing: 4px;">{{ .Token }}</p>
+
+<p>This code expires soon. If you did not request it, you can ignore this email.</p>
+```
+
+The key piece is `{{ .Token }}`. If the template only uses `{{ .ConfirmationURL }}`, the email will only show a link.
 
 ## First Data Model
 
