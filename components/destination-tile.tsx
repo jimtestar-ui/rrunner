@@ -39,18 +39,25 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
       <View>
         <Text
           numberOfLines={1}
+          ellipsizeMode="clip"
           selectable
           style={{
             color: "#ffffff",
             fontSize: ultraCompact ? 13 : compact ? 16 : 18,
             fontWeight: "900",
+            lineHeight: ultraCompact ? 16 : compact ? 19 : 22,
             textTransform: "uppercase",
           }}
         >
           {destination.nickname}
         </Text>
         {!ultraCompact ? (
-          <Text numberOfLines={1} selectable style={{ color: "#ffffff", fontSize: compact ? 12 : 14 }}>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="clip"
+            selectable
+            style={{ color: "#ffffff", fontSize: compact ? 12 : 14, lineHeight: compact ? 15 : 17 }}
+          >
             {destination.name}
           </Text>
         ) : null}
