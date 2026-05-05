@@ -57,7 +57,11 @@ export default function QuickScanScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <BrandHeader />
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 10, gap: 10, paddingBottom: 130 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ padding: 10, gap: 10, paddingBottom: 16 }}
+      >
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 2 }}>
           <Link href="/add-destination" asChild>
             <Pressable>
@@ -99,8 +103,10 @@ export default function QuickScanScreen() {
           backgroundColor: "#ffffff",
           borderTopColor: "#e7e7e7",
           borderTopWidth: 1,
-          paddingBottom: 18,
-          paddingTop: 10,
+          flexShrink: 0,
+          paddingBottom: 8,
+          paddingHorizontal: 10,
+          paddingTop: 6,
         }}
       >
         <Pressable
@@ -109,27 +115,25 @@ export default function QuickScanScreen() {
           style={{
             alignItems: "center",
             justifyContent: "center",
-            width: 120,
-            height: 72,
+            width: 96,
+            height: 56,
           }}
         >
           {refreshing ? (
             <ActivityIndicator color="#00c875" size="large" />
           ) : (
             <View style={{ alignItems: "center" }}>
-              <Ionicons name="car-sport" size={62} color="#00bf6f" />
-              <Ionicons name="refresh" size={36} color="#ffffff" style={{ position: "absolute", top: 17 }} />
+              <Ionicons name="car-sport" size={50} color="#00bf6f" />
+              <Ionicons name="refresh" size={28} color="#ffffff" style={{ position: "absolute", top: 14 }} />
             </View>
           )}
         </Pressable>
-        <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
-          Tap refresh to check your location once before you commit.
-        </Text>
-        <Text selectable style={{ color: "#24282b", fontSize: 12, fontWeight: "900", textAlign: "center" }}>
-          {formatFreshness(state.lastRefreshAt)}
-        </Text>
-        <Text selectable style={{ color: "#5f6670", fontSize: 11, fontWeight: "800", textAlign: "center" }}>
-          {formatTrafficSource(state.trafficDataSource)}
+        <Text
+          selectable
+          numberOfLines={1}
+          style={{ color: "#5f6670", fontSize: 11, fontWeight: "800", textAlign: "center" }}
+        >
+          Safe-stop refresh only | {formatFreshness(state.lastRefreshAt)} | {formatTrafficSource(state.trafficDataSource)}
         </Text>
       </View>
     </View>
@@ -138,7 +142,7 @@ export default function QuickScanScreen() {
 
 function formatFreshness(lastRefreshAt?: string) {
   if (!lastRefreshAt) {
-    return "Check added traffic before accepting";
+    return "Not checked yet";
   }
 
   const elapsedMinutes = Math.floor((Date.now() - new Date(lastRefreshAt).getTime()) / 60000);
