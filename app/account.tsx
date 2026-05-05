@@ -6,6 +6,12 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+type AccountProfile = {
+  plan_type: string;
+  location_limit: number;
+  is_admin: boolean;
+};
+
 const primaryButton = {
   alignItems: "center" as const,
   backgroundColor: "#0b9db9",
@@ -34,6 +40,7 @@ export default function AccountScreen() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [status, setStatus] = useState("Guest mode is on. Your locations stay on this device.");
   const [syncStatus, setSyncStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,15 +49,33 @@ export default function AccountScreen() {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setEmail(data.session?.user.email ?? "");
+      if (data.session?.user.id) {
+        loadProfile(data.session.user.id);
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setEmail(nextSession?.user.email ?? "");
+      if (nextSession?.user.id) {
+        loadProfile(nextSession.user.id);
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  async function loadProfile(userId: string) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("plan_type, location_limit, is_admin")
+      .eq("id", userId)
+      .maybeSingle();
+
+    setProfile(data ?? null);
+  }
 
   async function handleSendCode() {
     const normalizedEmail = email.trim().toLowerCase();
@@ -106,8 +131,11 @@ export default function AccountScreen() {
 
     setSession(data.session);
     const profileError = await ensureProfile(data.session?.user.id, data.session?.user.email ?? normalizedEmail);
+    if (data.session?.user.id) {
+      await loadProfile(data.session.user.id);
+    }
     setLoading(false);
-    setStatus(profileError ? `Signed in, but profile setup failed: ${profileError}` : "Signed in. Next step is syncing saved locations.");
+    setStatus(profileError ? `Signed in, but profile setup failed: ${profileError}` : "Signed in.");
   }
 
   async function handleSaveGuestLocations() {
@@ -122,13 +150,13 @@ export default function AccountScreen() {
     }
 
     setLoading(true);
-    const { data: profile, error: profileError } = await supabase
+    const { data: currentProfile, error: profileError } = await supabase
       .from("profiles")
-      .select("location_limit")
+      .select("plan_type, location_limit, is_admin")
       .eq("id", session.user.id)
       .single();
 
-    const locationLimit = profile?.location_limit ?? 2;
+    const locationLimit = currentProfile?.location_limit ?? 2;
     const locationsToSave = state.destinations.slice(0, locationLimit);
     const skippedCount = Math.max(0, state.destinations.length - locationsToSave.length);
 
@@ -137,6 +165,12 @@ export default function AccountScreen() {
       setSyncStatus(`Plan check failed: ${profileError.message}`);
       return;
     }
+
+    setProfile({
+      plan_type: currentProfile.plan_type ?? "FREE",
+      location_limit: locationLimit,
+      is_admin: currentProfile.is_admin ?? false,
+    });
 
     const savedDestinations = locationsToSave.map((destination) => ({
       source_local_id: destination.id,
@@ -205,9 +239,14 @@ export default function AccountScreen() {
     setLoading(true);
     await supabase.auth.signOut();
     setSession(null);
+    setProfile(null);
     setLoading(false);
     setStatus("Signed out. Guest mode is on.");
   }
+
+  const planType = profile?.plan_type === "PRO" ? "PRO" : "FREE";
+  const planLabel = planType === "PRO" ? "Pro" : "Free";
+  const locationLimit = profile?.location_limit ?? (planType === "PRO" ? 10 : 2);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
@@ -217,18 +256,37 @@ export default function AccountScreen() {
           Account
         </Text>
         <Text selectable style={{ color: "#5f6670", fontSize: 15, fontWeight: "800", textAlign: "center" }}>
-          Use RoadeRunner as a guest, or sign in to save your work zones later.
+          {session
+            ? "Your saved destinations are connected to this account."
+            : "Use RoadeRunner as a guest, or sign in to save destinations."}
         </Text>
 
         <View style={{ backgroundColor: "#f1f1f1", borderRadius: 8, padding: 16, gap: 12 }}>
           <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900" }}>
-            {session ? "Signed In" : "Guest Mode"}
+            {session ? `${planLabel} Account` : "Guest Mode"}
           </Text>
           <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
             {session ? session.user.email : "No account required for quick traffic checks."}
           </Text>
+          {session ? (
+            <View
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor: planType === "PRO" ? "#ffe03d" : "#ffffff",
+                borderColor: planType === "PRO" ? "#24282b" : "#c8ccd1",
+                borderRadius: 999,
+                borderWidth: 1,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+              }}
+            >
+              <Text style={{ color: "#24282b", fontSize: 13, fontWeight: "900" }}>
+                {planType === "PRO" ? "PRO PLAN" : "FREE PLAN"} - {locationLimit} saved locations
+              </Text>
+            </View>
+          ) : null}
           <Text selectable style={{ color: status.includes("error") ? "#b42318" : "#5f6670", fontSize: 13 }}>
-            {status}
+            {session ? `${locationLimit} saved locations available.` : status}
           </Text>
         </View>
 
@@ -282,13 +340,13 @@ export default function AccountScreen() {
           <View style={{ gap: 12 }}>
             <View style={{ backgroundColor: "#f1f1f1", borderRadius: 8, padding: 16, gap: 10 }}>
               <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900" }}>
-                Save Guest Locations
+                Save Locations
               </Text>
               <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
-                Free accounts save 2 locations. Pro will save up to 10.
+                Your {planLabel} plan saves up to {locationLimit} destinations.
               </Text>
               <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
-                Guest locations on this device: {state.destinations.length}
+                Locations on this device: {state.destinations.length}
               </Text>
               <Pressable
                 onPress={handleSaveGuestLocations}
