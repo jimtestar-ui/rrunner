@@ -81,6 +81,7 @@ export default function QuickScanScreen() {
               compact={compact}
               ultraCompact={ultraCompact}
               tileWidth={tileWidth}
+              showQuip={state.wittyModeEnabled}
             />
           ))}
         </View>

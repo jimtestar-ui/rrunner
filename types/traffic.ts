@@ -89,6 +89,7 @@ export interface AppState {
   trafficCheckLogs: TrafficCheckLog[];
   trafficServiceUrl: string;
   trafficDataSource: TrafficDataSource;
+  wittyModeEnabled: boolean;
   refreshStatus: TrafficStatus;
   lastRefreshAt?: string;
   errorMessage?: string;

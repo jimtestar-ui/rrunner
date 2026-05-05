@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function SettingsScreen() {
-  const { state, updateThresholds, setPlanType } = useAppStore();
+  const { state, updateThresholds, setPlanType, updateWittyMode } = useAppStore();
   const [greenMax, setGreenMax] = useState(String(state.Traffic_Threshold.greenMaxMinutes));
   const [redOver, setRedOver] = useState(String(state.Traffic_Threshold.redOverMinutes));
 
@@ -70,6 +70,30 @@ export default function SettingsScreen() {
           <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800" }}>
             Your location is checked only when you tap refresh.
           </Text>
+        </View>
+
+        <View style={{ gap: 12 }}>
+          <Text selectable style={{ color: "#24282b", fontSize: 17, fontWeight: "900" }}>
+            Card Personality
+          </Text>
+          <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
+            Witty Mode adds short traffic quips to destination cards. Leave it off for a cleaner quick-scan board.
+          </Text>
+          <Pressable
+            onPress={() => updateWittyMode(!state.wittyModeEnabled)}
+            style={{
+              alignItems: "center",
+              backgroundColor: state.wittyModeEnabled ? "#0b9db9" : "#ffffff",
+              borderColor: "#0b9db9",
+              borderRadius: 8,
+              borderWidth: 2,
+              paddingVertical: 14,
+            }}
+          >
+            <Text style={{ color: state.wittyModeEnabled ? "#ffffff" : "#0b9db9", fontSize: 16, fontWeight: "900" }}>
+              Witty Mode {state.wittyModeEnabled ? "On" : "Off"}
+            </Text>
+          </Pressable>
         </View>
 
         <View style={{ gap: 12 }}>

@@ -14,9 +14,10 @@ interface Props {
   compact: boolean;
   ultraCompact: boolean;
   tileWidth: number;
+  showQuip: boolean;
 }
 
-export function DestinationTile({ destination, compact, ultraCompact, tileWidth }: Props) {
+export function DestinationTile({ destination, compact, ultraCompact, tileWidth, showQuip }: Props) {
   const delay = destination.delayMinutes === null ? "--" : `+ ${destination.delayMinutes} MIN`;
   const backgroundColor = destination.cardColor || "#0b9db9";
   const dotColor = dotColors[destination.trafficColor] ?? dotColors.UNKNOWN;
@@ -53,7 +54,7 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth 
             {destination.name}
           </Text>
         ) : null}
-        {reasonLabel ? (
+        {showQuip && reasonLabel ? (
           <Text numberOfLines={1} selectable style={{ color: "#ffffff", fontSize: compact ? 11 : 12, fontWeight: "800" }}>
             {reasonLabel}
           </Text>

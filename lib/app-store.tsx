@@ -30,6 +30,7 @@ interface AppStore {
   addTrafficCheckLog: (log: Omit<TrafficCheckLog, "id" | "checkedAt">) => void;
   updateTrafficCheckLogNote: (logId: string, comparisonNote: string) => void;
   updateTrafficServiceUrl: (url: string) => void;
+  updateWittyMode: (enabled: boolean) => void;
 }
 
 const initialState: AppState = {
@@ -41,6 +42,7 @@ const initialState: AppState = {
   trafficCheckLogs: [],
   trafficServiceUrl: process.env.EXPO_PUBLIC_TRAFFIC_SERVICE_URL ?? "http://localhost:8787",
   trafficDataSource: "UNKNOWN",
+  wittyModeEnabled: false,
   refreshStatus: "IDLE",
 };
 
@@ -61,6 +63,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
             trafficServiceUrl:
               parsed.trafficServiceUrl ?? process.env.EXPO_PUBLIC_TRAFFIC_SERVICE_URL ?? "http://localhost:8787",
             trafficDataSource: parsed.trafficDataSource ?? "UNKNOWN",
+            wittyModeEnabled: parsed.wittyModeEnabled ?? false,
             Traffic_Threshold: {
               greenMaxMinutes: parsed.Traffic_Threshold.greenMaxMinutes ?? 5,
               redOverMinutes:
@@ -282,6 +285,17 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     });
   }
 
+  function updateWittyMode(enabled: boolean) {
+    setStateInternal((currentState) => {
+      const nextState = {
+        ...currentState,
+        wittyModeEnabled: enabled,
+      };
+      persistState(nextState);
+      return nextState;
+    });
+  }
+
   const value = useMemo(
     () => ({
       state,
@@ -295,6 +309,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       addTrafficCheckLog,
       updateTrafficCheckLogNote,
       updateTrafficServiceUrl,
+      updateWittyMode,
     }),
     [state],
   );
