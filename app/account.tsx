@@ -41,6 +41,7 @@ export default function AccountScreen() {
   const [code, setCode] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<AccountProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [status, setStatus] = useState("Guest mode is on. Your locations stay on this device.");
   const [syncStatus, setSyncStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,13 +69,18 @@ export default function AccountScreen() {
   }, []);
 
   async function loadProfile(userId: string) {
-    const { data } = await supabase
+    setProfileLoading(true);
+    const { data, error } = await supabase
       .from("profiles")
       .select("plan_type, location_limit, is_admin")
       .eq("id", userId)
       .maybeSingle();
 
+    setProfileLoading(false);
     setProfile(data ?? null);
+    if (error) {
+      setStatus(`Plan check failed: ${error.message}`);
+    }
   }
 
   async function handleSendCode() {
@@ -244,9 +250,9 @@ export default function AccountScreen() {
     setStatus("Signed out. Guest mode is on.");
   }
 
-  const planType = profile?.plan_type === "PRO" ? "PRO" : "FREE";
+  const planType = profile?.plan_type === "PRO" ? "PRO" : profile?.plan_type === "FREE" ? "FREE" : null;
   const planLabel = planType === "PRO" ? "Pro" : "Free";
-  const locationLimit = profile?.location_limit ?? (planType === "PRO" ? 10 : 2);
+  const locationLimit = profile?.location_limit ?? 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
@@ -263,7 +269,7 @@ export default function AccountScreen() {
 
         <View style={{ backgroundColor: "#f1f1f1", borderRadius: 8, padding: 16, gap: 12 }}>
           <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900" }}>
-            {session ? `${planLabel} Account` : "Guest Mode"}
+            {session ? (planType ? `${planLabel} Account` : "Checking Account") : "Guest Mode"}
           </Text>
           <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
             {session ? session.user.email : "No account required for quick traffic checks."}
@@ -281,12 +287,22 @@ export default function AccountScreen() {
               }}
             >
               <Text style={{ color: "#24282b", fontSize: 13, fontWeight: "900" }}>
-                {planType === "PRO" ? "PRO PLAN" : "FREE PLAN"} - {locationLimit} saved locations
+                {planType === "PRO"
+                  ? `PRO PLAN - ${locationLimit} saved locations`
+                  : planType === "FREE"
+                    ? `FREE PLAN - ${locationLimit} saved locations`
+                    : "CHECKING PLAN"}
               </Text>
             </View>
           ) : null}
           <Text selectable style={{ color: status.includes("error") ? "#b42318" : "#5f6670", fontSize: 13 }}>
-            {session ? `${locationLimit} saved locations available.` : status}
+            {session
+              ? profileLoading
+                ? "Checking your account plan..."
+                : planType
+                  ? `${locationLimit} saved locations available.`
+                  : "Plan not found. Check this user's profile in Supabase."
+              : status}
           </Text>
         </View>
 
@@ -343,7 +359,9 @@ export default function AccountScreen() {
                 Save Locations
               </Text>
               <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
-                Your {planLabel} plan saves up to {locationLimit} destinations.
+                {planType
+                  ? `Your ${planLabel} plan saves up to ${locationLimit} destinations.`
+                  : "Your plan is still loading."}
               </Text>
               <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
                 Locations on this device: {state.destinations.length}
