@@ -20,6 +20,8 @@ Use the publishable key, not the service role key. Never put the service role ke
 3. Paste the SQL from `docs/supabase-schema.sql`.
 4. Run it.
 
+Then run `docs/supabase-phase1-auth.sql`. It adds the policy needed for the app to create a safe Free profile after sign-in.
+
 ## First Data Model
 
 This creates the first product-ready foundation:

@@ -23,11 +23,18 @@ export function BrandHeader() {
           <Text style={{ color: "#ffffff", fontSize: 34, fontWeight: "900", lineHeight: 34 }}>RR</Text>
           <Text style={{ color: "#ffffff", fontSize: 10, fontWeight: "700", letterSpacing: 2 }}>FAST ROUTE BOARD</Text>
         </View>
-        <Link href="/settings" asChild>
-          <Pressable hitSlop={12}>
-            <Ionicons name="settings-sharp" size={31} color="#ffffff" />
-          </Pressable>
-        </Link>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Link href="/account" asChild>
+            <Pressable hitSlop={12}>
+              <Ionicons name="person-circle" size={31} color="#ffffff" />
+            </Pressable>
+          </Link>
+          <Link href="/settings" asChild>
+            <Pressable hitSlop={12}>
+              <Ionicons name="settings-sharp" size={31} color="#ffffff" />
+            </Pressable>
+          </Link>
+        </View>
       </View>
       <Text style={{ alignSelf: "center", fontSize: 30, fontWeight: "900", fontStyle: "italic" }}>
         <Text style={{ color: "#ffe124" }}>ROADE</Text>
