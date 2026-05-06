@@ -28,7 +28,8 @@
           "locationWhenInUsePermission": "RoadeRunner uses your current location only when you refresh traffic for saved destinations."
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-web-browser"
     ]
   }
 }

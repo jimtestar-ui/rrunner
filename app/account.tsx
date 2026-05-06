@@ -3,9 +3,14 @@ import { useAppStore } from "@/lib/app-store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Destination } from "@/types/traffic";
 import { Session } from "@supabase/supabase-js";
+import { makeRedirectUri } from "expo-auth-session";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+
+WebBrowser.maybeCompleteAuthSession();
 
 type AccountProfile = {
   plan_type: string;
@@ -44,6 +49,15 @@ const outlineButton = {
 const dangerButton = {
   alignItems: "center" as const,
   borderColor: "#b42318",
+  borderRadius: 8,
+  borderWidth: 2,
+  paddingVertical: 14,
+};
+
+const googleButton = {
+  alignItems: "center" as const,
+  backgroundColor: "#ffffff",
+  borderColor: "#24282b",
   borderRadius: 8,
   borderWidth: 2,
   paddingVertical: 14,
@@ -118,6 +132,93 @@ export default function AccountScreen() {
     }
 
     replaceDestinations((data ?? []).map(mapAccountDestination), userId);
+  }
+
+  async function createSessionFromUrl(url: string) {
+    const { params, errorCode } = QueryParams.getQueryParams(url);
+
+    if (errorCode) {
+      throw new Error(errorCode);
+    }
+
+    if (params.code) {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(params.code);
+
+      if (error) {
+        throw error;
+      }
+
+      return data.session;
+    }
+
+    if (params.access_token && params.refresh_token) {
+      const { data, error } = await supabase.auth.setSession({
+        access_token: params.access_token,
+        refresh_token: params.refresh_token,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data.session;
+    }
+
+    return null;
+  }
+
+  async function handleGoogleSignIn() {
+    if (!isSupabaseConfigured) {
+      setStatus("Supabase is not configured on this device.");
+      return;
+    }
+
+    setLoading(true);
+    setStatus("Opening Google sign-in...");
+
+    try {
+      const redirectTo = makeRedirectUri();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
+      if (result.type !== "success") {
+        setStatus("Google sign-in was canceled.");
+        return;
+      }
+
+      const nextSession = await createSessionFromUrl(result.url);
+
+      if (!nextSession?.user.id) {
+        setStatus("Google sign-in did not return a session.");
+        return;
+      }
+
+      setSession(nextSession);
+      setEmail(nextSession.user.email ?? "");
+      const profileError = await ensureProfile(nextSession.user.id, nextSession.user.email ?? undefined);
+      await loadProfile(nextSession.user.id);
+
+      if (state.destinationAccountUserId && state.destinationAccountUserId !== nextSession.user.id) {
+        await loadAccountDestinations(nextSession.user.id);
+      }
+
+      setStatus(profileError ? `Signed in, but profile setup failed: ${profileError}` : "Signed in with Google.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Google sign-in failed.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSendCode() {
@@ -330,6 +431,21 @@ export default function AccountScreen() {
 
         {!session ? (
           <View style={{ gap: 12 }}>
+            <Pressable
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+              style={({ pressed }) => [
+                googleButton,
+                (pressed || loading) && { opacity: 0.65, transform: [{ scale: 0.99 }] },
+              ]}
+            >
+              <Text style={{ color: "#24282b", fontSize: 17, fontWeight: "900" }}>
+                {loading ? "Opening Google..." : "Continue with Google"}
+              </Text>
+            </Pressable>
+            <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
+              Email code is here only as a backup during beta.
+            </Text>
             <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800" }}>
               Supabase may include a sign-in link in the email. For this beta, use the code instead.
             </Text>

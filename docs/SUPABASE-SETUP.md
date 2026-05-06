@@ -63,6 +63,38 @@ The key piece is `{{ .Token }}`. If the template only uses `{{ .ConfirmationURL 
 
 Supabase limits repeated OTP requests. If you just requested a code, wait at least 60 seconds before trying again.
 
+## Google Sign-In Setup
+
+Google sign-in is the preferred user flow. Email code sign-in should stay as a backup only.
+
+In Google Cloud:
+
+1. Go to Google Auth Platform.
+2. Configure Branding, Audience, and Data Access.
+3. Add these scopes:
+   - `openid`
+   - `.../auth/userinfo.email`
+   - `.../auth/userinfo.profile`
+4. Create an OAuth Client ID.
+5. Choose `Web application`.
+6. Add the Supabase callback URL under Authorized redirect URIs.
+   - Find it in Supabase under `Authentication > Providers > Google`.
+   - It usually looks like `https://YOUR-PROJECT.supabase.co/auth/v1/callback`.
+7. Copy the Google Client ID and Client Secret.
+
+In Supabase:
+
+1. Go to `Authentication > Providers > Google`.
+2. Enable Google.
+3. Paste the Google Client ID and Client Secret.
+4. Go to `Authentication > URL Configuration`.
+5. Add redirect URLs for the app:
+   - `roaderunner://**`
+   - your current Expo redirect URL if testing in Expo Go
+   - your deployed web URL when available
+
+Expo Go may generate a changing development redirect URL. If Google opens but does not return to the app, check the error in Supabase Auth logs, copy the redirect URL from the failed request, and add it to Supabase Redirect URLs.
+
 ## Admin Tools Phase 1
 
 Run `docs/supabase-admin-tools-phase1.sql` in the Supabase SQL Editor.
