@@ -359,6 +359,18 @@ export default function AccountScreen() {
     );
   }
 
+  async function handleReloadSavedLocations() {
+    if (!session?.user.id) {
+      setSyncStatus("Sign in first.");
+      return;
+    }
+
+    setLoading(true);
+    await loadAccountDestinations(session.user.id);
+    setLoading(false);
+    setSyncStatus("Reloaded saved locations from this account.");
+  }
+
   async function handleSignOut() {
     setLoading(true);
     await supabase.auth.signOut();
@@ -372,6 +384,8 @@ export default function AccountScreen() {
   const planType = profile?.plan_type === "PRO" ? "PRO" : profile?.plan_type === "FREE" ? "FREE" : null;
   const planLabel = planType === "PRO" ? "Pro" : "Free";
   const locationLimit = profile?.location_limit ?? 0;
+  const isShowingAccountLocations = Boolean(session?.user.id && state.destinationAccountUserId === session.user.id);
+  const hasDeviceLocationsToSave = Boolean(session?.user.id && !state.destinationAccountUserId && state.destinations.length > 0);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
@@ -493,26 +507,28 @@ export default function AccountScreen() {
           <View style={{ gap: 12 }}>
             <View style={{ backgroundColor: "#f1f1f1", borderRadius: 8, padding: 16, gap: 10 }}>
               <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900" }}>
-                Save Locations
+                {hasDeviceLocationsToSave ? "Save Device Locations" : "Location Sync"}
               </Text>
               <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
-                {planType
-                  ? `Your ${planLabel} plan saves up to ${locationLimit} destinations.`
-                  : "Your plan is still loading."}
+                {hasDeviceLocationsToSave
+                  ? `Save these device locations to your ${planLabel} account.`
+                  : "Add, edit, and delete locations save to this account automatically."}
               </Text>
               <Text selectable style={{ color: "#5f6670", fontSize: 13 }}>
-                Locations on this device: {state.destinations.length}
+                {isShowingAccountLocations
+                  ? `Saved account locations: ${state.destinations.length} / ${locationLimit}`
+                  : `Locations currently shown: ${state.destinations.length}`}
               </Text>
               <Pressable
-                onPress={handleSaveGuestLocations}
+                onPress={hasDeviceLocationsToSave ? handleSaveGuestLocations : handleReloadSavedLocations}
                 disabled={loading}
                 style={({ pressed }) => [
-                  primaryButton,
+                  hasDeviceLocationsToSave ? primaryButton : outlineButton,
                   (pressed || loading) && { opacity: 0.65, transform: [{ scale: 0.99 }] },
                 ]}
               >
-                <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "900" }}>
-                  {loading ? "Saving..." : "Save My Locations"}
+                <Text style={{ color: hasDeviceLocationsToSave ? "#ffffff" : "#0b9db9", fontSize: 16, fontWeight: "900" }}>
+                  {loading ? "Working..." : hasDeviceLocationsToSave ? "Save Device Locations" : "Reload Saved Locations"}
                 </Text>
               </Pressable>
               {syncStatus ? (
