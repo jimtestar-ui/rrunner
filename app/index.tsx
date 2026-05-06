@@ -86,6 +86,22 @@ export default function QuickScanScreen() {
           ))}
         </View>
 
+        {count === 0 ? (
+          <View style={{ alignItems: "center", backgroundColor: "#f1f1f1", borderRadius: 8, gap: 10, padding: 18 }}>
+            <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900", textAlign: "center" }}>
+              No saved locations yet
+            </Text>
+            <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
+              Add a destination to start checking traffic before accepting a trip.
+            </Text>
+            <Link href="/add-destination" asChild>
+              <Pressable style={{ alignItems: "center", backgroundColor: "#0b9db9", borderRadius: 8, paddingHorizontal: 18, paddingVertical: 12 }}>
+                <Text style={{ color: "#ffffff", fontSize: 15, fontWeight: "900" }}>Add Location</Text>
+              </Pressable>
+            </Link>
+          </View>
+        ) : null}
+
         <Text selectable style={{ color: "#5f6670", fontSize: 12, fontWeight: "800", textAlign: "center" }}>
           Your last check was {formatFreshness(state.lastRefreshAt)}. Traffic info by {formatTrafficProvider(state.trafficDataSource)}
         </Text>

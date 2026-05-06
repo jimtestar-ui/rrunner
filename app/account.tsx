@@ -1,7 +1,7 @@
 import { BrandHeader } from "@/components/brand-header";
+import { loadSavedAccountDestinations, mapAccountDestination } from "@/lib/account-destinations";
 import { useAppStore } from "@/lib/app-store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
-import { Destination } from "@/types/traffic";
 import { Session } from "@supabase/supabase-js";
 import { makeRedirectUri } from "expo-auth-session";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
@@ -16,19 +16,6 @@ type AccountProfile = {
   plan_type: string;
   location_limit: number;
   is_admin: boolean;
-};
-
-type AccountDestinationRow = {
-  id: string;
-  source_local_id: string | null;
-  name: string;
-  address: string;
-  place_id: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  nickname: string;
-  card_color: string | null;
-  is_priority: boolean | null;
 };
 
 const primaryButton = {
@@ -90,9 +77,7 @@ export default function AccountScreen() {
       setEmail(data.session?.user.email ?? "");
       if (data.session?.user.id) {
         loadProfile(data.session.user.id);
-        if (state.destinationAccountUserId && state.destinationAccountUserId !== data.session.user.id) {
-          loadAccountDestinations(data.session.user.id);
-        }
+        loadAccountDestinations(data.session.user.id);
       }
     });
 
@@ -101,9 +86,7 @@ export default function AccountScreen() {
       setEmail(nextSession?.user.email ?? "");
       if (nextSession?.user.id) {
         loadProfile(nextSession.user.id);
-        if (state.destinationAccountUserId && state.destinationAccountUserId !== nextSession.user.id) {
-          loadAccountDestinations(nextSession.user.id);
-        }
+        loadAccountDestinations(nextSession.user.id);
       } else {
         setProfile(null);
         replaceDestinations([], null);
@@ -129,11 +112,7 @@ export default function AccountScreen() {
   }
 
   async function loadAccountDestinations(userId: string) {
-    const { data, error } = await supabase
-      .from("destinations")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: true });
+    const { destinations, error } = await loadSavedAccountDestinations(userId);
 
     if (error) {
       setSyncStatus(`Location reload failed: ${error.message}`);
@@ -141,7 +120,7 @@ export default function AccountScreen() {
       return;
     }
 
-    replaceDestinations((data ?? []).map(mapAccountDestination), userId);
+    replaceDestinations(destinations, userId);
   }
 
   async function createSessionFromUrl(url: string) {
@@ -221,10 +200,7 @@ export default function AccountScreen() {
       setEmail(nextSession.user.email ?? "");
       const profileError = await ensureProfile(nextSession.user.id, nextSession.user.email ?? undefined);
       await loadProfile(nextSession.user.id);
-
-      if (state.destinationAccountUserId && state.destinationAccountUserId !== nextSession.user.id) {
-        await loadAccountDestinations(nextSession.user.id);
-      }
+      await loadAccountDestinations(nextSession.user.id);
 
       setStatus(profileError ? `Signed in, but profile setup failed: ${profileError}` : "Signed in with Google.");
     } catch (error) {
@@ -290,6 +266,7 @@ export default function AccountScreen() {
     const profileError = await ensureProfile(data.session?.user.id, data.session?.user.email ?? normalizedEmail);
     if (data.session?.user.id) {
       await loadProfile(data.session.user.id);
+      await loadAccountDestinations(data.session.user.id);
     }
     setLoading(false);
     setStatus(profileError ? `Signed in, but profile setup failed: ${profileError}` : "Signed in.");
@@ -565,27 +542,6 @@ export default function AccountScreen() {
       </ScrollView>
     </View>
   );
-}
-
-function mapAccountDestination(destination: AccountDestinationRow): Destination {
-  return {
-    id: destination.source_local_id ?? destination.id,
-    name: destination.name,
-    address: destination.address,
-    placeId: destination.place_id ?? undefined,
-    latitude: destination.latitude ?? undefined,
-    longitude: destination.longitude ?? undefined,
-    nickname: destination.nickname,
-    cardColor: destination.card_color ?? "#0b9db9",
-    isPriority: destination.is_priority ?? false,
-    status: "IDLE",
-    trafficColor: "UNKNOWN",
-    delayMinutes: null,
-    etaMinutes: null,
-    normalMinutes: null,
-    alternateRouteExists: null,
-    congestionSegments: [],
-  };
 }
 
 async function ensureProfile(userId?: string, email?: string) {

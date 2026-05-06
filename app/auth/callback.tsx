@@ -1,3 +1,5 @@
+import { loadSavedAccountDestinations } from "@/lib/account-destinations";
+import { useAppStore } from "@/lib/app-store";
 import { supabase } from "@/lib/supabase";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
@@ -6,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Platform, Text, View } from "react-native";
 
 export default function AuthCallbackScreen() {
+  const { replaceDestinations } = useAppStore();
   const params = useLocalSearchParams<{ code?: string; access_token?: string; refresh_token?: string; error?: string }>();
   const currentUrl = Linking.useURL();
   const [message, setMessage] = useState("Finishing Google sign-in...");
@@ -80,9 +83,16 @@ export default function AuthCallbackScreen() {
       }
 
       const profileError = await ensureProfile(userId, email);
+      const { destinations, error: destinationsError } = await loadSavedAccountDestinations(userId);
+
+      if (!destinationsError) {
+        replaceDestinations(destinations, userId);
+      }
 
       if (profileError) {
         setMessage(`Signed in, but profile setup failed: ${profileError}`);
+      } else if (destinationsError) {
+        setMessage(`Signed in, but locations did not load: ${destinationsError.message}`);
       } else {
         setMessage("Signed in with Google.");
       }
