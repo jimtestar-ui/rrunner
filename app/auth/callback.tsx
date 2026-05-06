@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
+import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
@@ -13,15 +15,22 @@ export default function AuthCallbackScreen() {
 
   async function finishSignIn() {
     try {
-      if (params.error) {
-        throw new Error(String(params.error));
+      const initialUrl = await Linking.getInitialURL();
+      const parsedParams = initialUrl ? QueryParams.getQueryParams(initialUrl).params : {};
+      const error = readParam(parsedParams.error) ?? readParam(params.error);
+      const code = readParam(parsedParams.code) ?? readParam(params.code);
+      const accessToken = readParam(parsedParams.access_token) ?? readParam(params.access_token);
+      const refreshToken = readParam(parsedParams.refresh_token) ?? readParam(params.refresh_token);
+
+      if (error) {
+        throw new Error(error);
       }
 
       let userId: string | undefined;
       let email: string | undefined;
 
-      if (params.code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(String(params.code));
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error) {
           throw error;
@@ -29,10 +38,10 @@ export default function AuthCallbackScreen() {
 
         userId = data.session?.user.id;
         email = data.session?.user.email ?? undefined;
-      } else if (params.access_token && params.refresh_token) {
+      } else if (accessToken && refreshToken) {
         const { data, error } = await supabase.auth.setSession({
-          access_token: String(params.access_token),
-          refresh_token: String(params.refresh_token),
+          access_token: accessToken,
+          refresh_token: refreshToken,
         });
 
         if (error) {
@@ -68,6 +77,10 @@ export default function AuthCallbackScreen() {
       </Text>
     </View>
   );
+}
+
+function readParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 async function ensureProfile(userId: string, email?: string) {
