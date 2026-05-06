@@ -38,9 +38,14 @@ Recommended Supabase settings:
    - `http://localhost:19006/**`
    - your Vercel URL, for example `https://your-project.vercel.app/**`
 
-For the current app flow, the important part is the one-time code. Supabase sends the Magic Link template for `signInWithOtp`, so update that template.
+For the current app flow, the important part is the one-time code. Supabase sends a link by default unless the email template includes `{{ .Token }}`.
 
-Go to Authentication > Email Templates > Magic Link.
+Update these templates:
+
+- `Authentication > Email Templates > Magic Link`
+- `Authentication > Email Templates > Confirm signup`
+
+If you create users through a Supabase invite flow, update `Invite user` too.
 
 Use a template like this:
 
@@ -55,6 +60,8 @@ Use a template like this:
 ```
 
 The key piece is `{{ .Token }}`. If the template only uses `{{ .ConfirmationURL }}`, the email will only show a link.
+
+Supabase limits repeated OTP requests. If you just requested a code, wait at least 60 seconds before trying again.
 
 ## Admin Tools Phase 1
 
