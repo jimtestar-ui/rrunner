@@ -3,7 +3,7 @@ import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 
 export default function AuthCallbackScreen() {
   const params = useLocalSearchParams<{ code?: string; access_token?: string; refresh_token?: string; error?: string }>();
@@ -18,8 +18,16 @@ export default function AuthCallbackScreen() {
   async function finishSignIn() {
     try {
       const initialUrl = await Linking.getInitialURL();
+      const runtimeUrl = getRuntimeUrl(currentUrl ?? initialUrl);
+      const didBridge = await forwardWebCallbackToApp(runtimeUrl);
+
+      if (didBridge) {
+        setMessage("Returning to RoadeRunner...");
+        return;
+      }
+
       const initialParams = initialUrl ? QueryParams.getQueryParams(initialUrl).params : {};
-      const currentParams = currentUrl ? QueryParams.getQueryParams(currentUrl).params : {};
+      const currentParams = runtimeUrl ? QueryParams.getQueryParams(runtimeUrl).params : {};
       const error = readParam(currentParams.error) ?? readParam(initialParams.error) ?? readParam(params.error);
       const code = readParam(currentParams.code) ?? readParam(initialParams.code) ?? readParam(params.code);
       const accessToken =
@@ -31,7 +39,7 @@ export default function AuthCallbackScreen() {
 
       setDebugMessage(
         [
-          `Callback URL: ${summarizeUrl(currentUrl ?? initialUrl)}`,
+          `Callback URL: ${summarizeUrl(runtimeUrl ?? initialUrl)}`,
           `Has code: ${code ? "yes" : "no"}`,
           `Has token: ${accessToken && refreshToken ? "yes" : "no"}`,
         ].join("\n"),
@@ -101,6 +109,38 @@ export default function AuthCallbackScreen() {
 
 function readParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function getRuntimeUrl(fallbackUrl: string | null) {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return window.location.href;
+  }
+
+  return fallbackUrl;
+}
+
+async function forwardWebCallbackToApp(url: string | null) {
+  if (Platform.OS !== "web" || !url) {
+    return false;
+  }
+
+  const parsedUrl = new URL(url);
+  const returnTo = parsedUrl.searchParams.get("return_to");
+
+  if (!returnTo) {
+    return false;
+  }
+
+  const appUrl = new URL(returnTo);
+
+  parsedUrl.searchParams.forEach((value, key) => {
+    if (key !== "return_to") {
+      appUrl.searchParams.set(key, value);
+    }
+  });
+
+  await Linking.openURL(appUrl.toString());
+  return true;
 }
 
 function summarizeUrl(url: string | null) {

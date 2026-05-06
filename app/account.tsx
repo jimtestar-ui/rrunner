@@ -8,7 +8,7 @@ import * as QueryParams from "expo-auth-session/build/QueryParams";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -66,6 +66,15 @@ const googleButton = {
 export default function AccountScreen() {
   const { state, replaceDestinations } = useAppStore();
   const googleRedirectTo = useMemo(() => makeRedirectUri({ path: "auth/callback" }), []);
+  const googleBridgeRedirectTo = useMemo(() => {
+    const hostedCallbackUrl = process.env.EXPO_PUBLIC_AUTH_CALLBACK_URL ?? "https://rrunner-nine.vercel.app/auth/callback";
+
+    if (Platform.OS === "web") {
+      return googleRedirectTo;
+    }
+
+    return `${hostedCallbackUrl}?return_to=${encodeURIComponent(googleRedirectTo)}`;
+  }, [googleRedirectTo]);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [session, setSession] = useState<Session | null>(null);
@@ -185,7 +194,7 @@ export default function AccountScreen() {
             access_type: "offline",
             prompt: "select_account",
           },
-          redirectTo: googleRedirectTo,
+          redirectTo: googleBridgeRedirectTo,
           skipBrowserRedirect: true,
         },
       });
@@ -451,7 +460,7 @@ export default function AccountScreen() {
               Email code is here only as a backup during beta.
             </Text>
             <Text selectable style={{ color: "#5f6670", fontSize: 11, textAlign: "center" }}>
-              Google redirect URL: {googleRedirectTo}
+              Google app return URL: {googleRedirectTo}
             </Text>
             <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800" }}>
               Supabase may include a sign-in link in the email. For this beta, use the code instead.

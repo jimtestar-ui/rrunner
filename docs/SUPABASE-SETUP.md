@@ -91,10 +91,11 @@ In Supabase:
 5. Add redirect URLs for the app:
    - `roaderunner://**`
    - `roaderunner://auth/callback`
+   - `https://rrunner-nine.vercel.app/auth/callback**`
    - your current Expo redirect URL if testing in Expo Go
    - your deployed web URL when available
 
-Expo Go may generate a changing development redirect URL. The Account screen shows the exact `Google redirect URL` the app is using. Copy that exact URL into Supabase Redirect URLs if Google opens but does not return to the app.
+Expo Go may generate a changing development redirect URL. The Account screen shows the exact `Google app return URL` the app is using. The app uses the hosted Vercel callback as a bridge during Expo Go testing.
 
 ## Admin Tools Phase 1
 
