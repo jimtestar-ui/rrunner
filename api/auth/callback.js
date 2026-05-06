@@ -63,9 +63,35 @@ function renderPage(message, appUrl) {
   <body>
     <main>
       <h1>${escapedMessage}</h1>
-      ${appUrl ? `<p>If RoadeRunner does not reopen automatically, tap below.</p><a href="${escapedUrl}">Open RoadeRunner</a>` : ""}
+      ${appUrl ? `<p>If RoadeRunner does not reopen automatically, tap below.</p><a id="open-app" href="${escapedUrl}">Open RoadeRunner</a>` : ""}
     </main>
-    ${appUrl ? `<script>window.location.href = ${scriptUrl};</script>` : ""}
+    ${appUrl ? `<script>
+      (function () {
+        var appUrl = new URL(${scriptUrl});
+        var currentUrl = new URL(window.location.href);
+        var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+        currentUrl.searchParams.forEach(function (value, key) {
+          if (key !== "return_to") {
+            appUrl.searchParams.set(key, value);
+          }
+        });
+
+        hashParams.forEach(function (value, key) {
+          if (key !== "return_to") {
+            appUrl.searchParams.set(key, value);
+          }
+        });
+
+        var finalUrl = appUrl.toString();
+        var openLink = document.getElementById("open-app");
+        if (openLink) {
+          openLink.href = finalUrl;
+        }
+
+        window.location.href = finalUrl;
+      })();
+    </script>` : ""}
   </body>
 </html>`;
 }
