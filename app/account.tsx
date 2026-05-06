@@ -181,6 +181,10 @@ export default function AccountScreen() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
+          queryParams: {
+            access_type: "offline",
+            prompt: "select_account",
+          },
           redirectTo: googleRedirectTo,
           skipBrowserRedirect: true,
         },

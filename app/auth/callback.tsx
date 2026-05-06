@@ -7,20 +7,35 @@ import { Text, View } from "react-native";
 
 export default function AuthCallbackScreen() {
   const params = useLocalSearchParams<{ code?: string; access_token?: string; refresh_token?: string; error?: string }>();
+  const currentUrl = Linking.useURL();
   const [message, setMessage] = useState("Finishing Google sign-in...");
+  const [debugMessage, setDebugMessage] = useState("");
 
   useEffect(() => {
     finishSignIn();
-  }, []);
+  }, [currentUrl]);
 
   async function finishSignIn() {
     try {
       const initialUrl = await Linking.getInitialURL();
-      const parsedParams = initialUrl ? QueryParams.getQueryParams(initialUrl).params : {};
-      const error = readParam(parsedParams.error) ?? readParam(params.error);
-      const code = readParam(parsedParams.code) ?? readParam(params.code);
-      const accessToken = readParam(parsedParams.access_token) ?? readParam(params.access_token);
-      const refreshToken = readParam(parsedParams.refresh_token) ?? readParam(params.refresh_token);
+      const initialParams = initialUrl ? QueryParams.getQueryParams(initialUrl).params : {};
+      const currentParams = currentUrl ? QueryParams.getQueryParams(currentUrl).params : {};
+      const error = readParam(currentParams.error) ?? readParam(initialParams.error) ?? readParam(params.error);
+      const code = readParam(currentParams.code) ?? readParam(initialParams.code) ?? readParam(params.code);
+      const accessToken =
+        readParam(currentParams.access_token) ?? readParam(initialParams.access_token) ?? readParam(params.access_token);
+      const refreshToken =
+        readParam(currentParams.refresh_token) ??
+        readParam(initialParams.refresh_token) ??
+        readParam(params.refresh_token);
+
+      setDebugMessage(
+        [
+          `Callback URL: ${summarizeUrl(currentUrl ?? initialUrl)}`,
+          `Has code: ${code ? "yes" : "no"}`,
+          `Has token: ${accessToken && refreshToken ? "yes" : "no"}`,
+        ].join("\n"),
+      );
 
       if (error) {
         throw new Error(error);
@@ -75,12 +90,25 @@ export default function AuthCallbackScreen() {
       <Text selectable style={{ color: "#24282b", fontSize: 24, fontWeight: "900", textAlign: "center" }}>
         {message}
       </Text>
+      {debugMessage ? (
+        <Text selectable style={{ color: "#5f6670", fontSize: 13, marginTop: 18, textAlign: "center" }}>
+          {debugMessage}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
 function readParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function summarizeUrl(url: string | null) {
+  if (!url) {
+    return "none";
+  }
+
+  return url.replace(/(code|access_token|refresh_token)=([^&#]+)/g, "$1=present");
 }
 
 async function ensureProfile(userId: string, email?: string) {
