@@ -7,7 +7,7 @@ import { makeRedirectUri } from "expo-auth-session";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -65,6 +65,7 @@ const googleButton = {
 
 export default function AccountScreen() {
   const { state, replaceDestinations } = useAppStore();
+  const googleRedirectTo = useMemo(() => makeRedirectUri({ path: "auth/callback" }), []);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [session, setSession] = useState<Session | null>(null);
@@ -177,11 +178,10 @@ export default function AccountScreen() {
     setStatus("Opening Google sign-in...");
 
     try {
-      const redirectTo = makeRedirectUri();
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo,
+          redirectTo: googleRedirectTo,
           skipBrowserRedirect: true,
         },
       });
@@ -190,7 +190,7 @@ export default function AccountScreen() {
         throw error;
       }
 
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      const result = await WebBrowser.openAuthSessionAsync(data.url, googleRedirectTo);
 
       if (result.type !== "success") {
         setStatus("Google sign-in was canceled.");
@@ -445,6 +445,9 @@ export default function AccountScreen() {
             </Pressable>
             <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
               Email code is here only as a backup during beta.
+            </Text>
+            <Text selectable style={{ color: "#5f6670", fontSize: 11, textAlign: "center" }}>
+              Google redirect URL: {googleRedirectTo}
             </Text>
             <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800" }}>
               Supabase may include a sign-in link in the email. For this beta, use the code instead.

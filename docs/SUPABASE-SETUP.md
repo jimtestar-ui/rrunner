@@ -90,10 +90,11 @@ In Supabase:
 4. Go to `Authentication > URL Configuration`.
 5. Add redirect URLs for the app:
    - `roaderunner://**`
+   - `roaderunner://auth/callback`
    - your current Expo redirect URL if testing in Expo Go
    - your deployed web URL when available
 
-Expo Go may generate a changing development redirect URL. If Google opens but does not return to the app, check the error in Supabase Auth logs, copy the redirect URL from the failed request, and add it to Supabase Redirect URLs.
+Expo Go may generate a changing development redirect URL. The Account screen shows the exact `Google redirect URL` the app is using. Copy that exact URL into Supabase Redirect URLs if Google opens but does not return to the app.
 
 ## Admin Tools Phase 1
 
