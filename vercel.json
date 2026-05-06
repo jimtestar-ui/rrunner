@@ -5,6 +5,10 @@
       "destination": "/api/health"
     },
     {
+      "source": "/auth/callback",
+      "destination": "/api/auth/callback"
+    },
+    {
       "source": "/places/search",
       "destination": "/api/places/search"
     },
