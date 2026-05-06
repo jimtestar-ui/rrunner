@@ -76,6 +76,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
             },
             destinations: parsed.destinations.map((destination, index) => ({
               ...destination,
+              accountDestinationId: destination.accountDestinationId,
               cardColor: destination.cardColor ?? CARD_COLORS[index % CARD_COLORS.length],
               isPriority: destination.isPriority ?? false,
               status: destination.status ?? "IDLE",

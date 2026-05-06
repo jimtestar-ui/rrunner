@@ -27,9 +27,74 @@ export async function loadSavedAccountDestinations(userId: string) {
   };
 }
 
+export async function getAccountLocationLimit(userId: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("location_limit")
+    .eq("id", userId)
+    .single();
+
+  return {
+    locationLimit: data?.location_limit ?? 2,
+    error,
+  };
+}
+
+export async function getSavedAccountDestinationCount(userId: string) {
+  const { count, error } = await supabase
+    .from("destinations")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  return {
+    count: count ?? 0,
+    error,
+  };
+}
+
+export async function saveAccountDestination(userId: string, destination: Destination) {
+  const { data, error } = await supabase
+    .from("destinations")
+    .upsert(
+      {
+        id: destination.accountDestinationId,
+        source_local_id: destination.id,
+        user_id: userId,
+        name: destination.name,
+        nickname: destination.nickname,
+        address: destination.address,
+        place_id: destination.placeId,
+        latitude: destination.latitude,
+        longitude: destination.longitude,
+        card_color: destination.cardColor,
+        is_priority: destination.isPriority,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,source_local_id" },
+    )
+    .select("*")
+    .single();
+
+  return {
+    destination: data ? mapAccountDestination(data) : null,
+    error,
+  };
+}
+
+export async function deleteAccountDestination(userId: string, destination: Destination) {
+  const query = supabase.from("destinations").delete().eq("user_id", userId);
+
+  if (destination.accountDestinationId) {
+    return query.eq("id", destination.accountDestinationId);
+  }
+
+  return query.eq("source_local_id", destination.id);
+}
+
 export function mapAccountDestination(destination: AccountDestinationRow): Destination {
   return {
     id: destination.source_local_id ?? destination.id,
+    accountDestinationId: destination.id,
     name: destination.name,
     address: destination.address,
     placeId: destination.place_id ?? undefined,

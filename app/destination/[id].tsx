@@ -3,7 +3,9 @@ import { ColorPicker } from "@/components/color-picker";
 import { Field } from "@/components/field";
 import { PlaceSearch } from "@/components/place-search";
 import { PriorityToggle } from "@/components/priority-toggle";
+import { deleteAccountDestination, loadSavedAccountDestinations, saveAccountDestination } from "@/lib/account-destinations";
 import { CARD_COLORS, useAppStore } from "@/lib/app-store";
+import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
@@ -11,7 +13,7 @@ import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
 export default function EditDestinationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { state, updateDestination, deleteDestination } = useAppStore();
+  const { state, updateDestination, deleteDestination, replaceDestinations } = useAppStore();
   const destination = useMemo(
     () => state.destinations.find((item) => item.id === id),
     [id, state.destinations],
@@ -24,14 +26,16 @@ export default function EditDestinationScreen() {
   const [placeId, setPlaceId] = useState<string | undefined>(destination?.placeId);
   const [latitude, setLatitude] = useState<number | undefined>(destination?.latitude);
   const [longitude, setLongitude] = useState<number | undefined>(destination?.longitude);
+  const [saving, setSaving] = useState(false);
 
-  function handleSaveAndReturn() {
+  async function handleSaveAndReturn() {
     if (!destination) {
       router.replace("/");
       return;
     }
 
-    updateDestination(destination.id, {
+    const nextDestination = {
+      ...destination,
       name: name.trim() || "Destination Name",
       address: address.trim(),
       placeId,
@@ -40,7 +44,30 @@ export default function EditDestinationScreen() {
       nickname: nickname.trim() || name.trim() || "Saved Stop",
       cardColor,
       isPriority,
-    });
+    };
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
+
+    if (userId) {
+      setSaving(true);
+      const { error } = await saveAccountDestination(userId, nextDestination);
+      const { destinations, error: loadError } = error
+        ? { destinations: [], error: null }
+        : await loadSavedAccountDestinations(userId);
+      setSaving(false);
+
+      if (error || loadError) {
+        Alert.alert("Save Failed", error?.message ?? loadError?.message ?? "Could not save this location.");
+        return;
+      }
+
+      replaceDestinations(destinations, userId);
+      router.replace("/");
+      return;
+    }
+
+    updateDestination(destination.id, nextDestination);
     router.replace("/");
   }
 
@@ -55,7 +82,26 @@ export default function EditDestinationScreen() {
       {
         text: "Delete",
         style: "destructive",
-        onPress: () => {
+        onPress: async () => {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const userId = sessionData.session?.user.id;
+
+          if (userId) {
+            const { error } = await deleteAccountDestination(userId, destination);
+            const { destinations, error: loadError } = error
+              ? { destinations: [], error: null }
+              : await loadSavedAccountDestinations(userId);
+
+            if (error || loadError) {
+              Alert.alert("Delete Failed", error?.message ?? loadError?.message ?? "Could not delete this location.");
+              return;
+            }
+
+            replaceDestinations(destinations, userId);
+            router.replace("/");
+            return;
+          }
+
           deleteDestination(destination.id);
           router.replace("/");
         },
@@ -114,9 +160,10 @@ export default function EditDestinationScreen() {
         <PriorityToggle value={isPriority} onValueChange={setIsPriority} />
         <Pressable
           onPress={handleSaveAndReturn}
+          disabled={saving}
           style={{
             alignItems: "center",
-            backgroundColor: "#0b9db9",
+            backgroundColor: saving ? "#9aa3aa" : "#0b9db9",
             borderRadius: 8,
             borderCurve: "continuous",
             marginTop: 12,
@@ -124,7 +171,7 @@ export default function EditDestinationScreen() {
           }}
         >
           <Text style={{ color: "#ffffff", fontSize: 18, fontWeight: "900" }}>
-            Save & Return to Main Screen
+            {saving ? "Saving..." : "Save & Return to Main Screen"}
           </Text>
         </Pressable>
         <Pressable

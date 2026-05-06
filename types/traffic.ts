@@ -35,6 +35,7 @@ export interface Congestion_Segment {
 
 export interface Destination {
   id: string;
+  accountDestinationId?: string;
   name: string;
   address: string;
   placeId?: string;

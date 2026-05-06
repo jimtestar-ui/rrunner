@@ -278,6 +278,12 @@ export default function AccountScreen() {
       return;
     }
 
+    if (state.destinationAccountUserId && state.destinationAccountUserId !== session.user.id) {
+      setSyncStatus("Reloading this account's saved locations.");
+      await loadAccountDestinations(session.user.id);
+      return;
+    }
+
     if (state.destinations.length === 0) {
       setSyncStatus("No guest locations to save yet.");
       return;
