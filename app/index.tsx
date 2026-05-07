@@ -8,10 +8,12 @@ import { Link } from "expo-router";
 import { useMemo } from "react";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function QuickScanScreen() {
   const { state, setState, addTrafficCheckLog } = useAppStore();
   const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
   const count = state.destinations.length;
   const compact = count > 10 || height < 760;
@@ -28,6 +30,7 @@ export default function QuickScanScreen() {
       }),
     [state.destinations],
   );
+  const hasTrafficResults = state.destinations.some((destination) => destination.delayMinutes !== null);
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -103,7 +106,9 @@ export default function QuickScanScreen() {
         ) : null}
 
         <Text selectable style={{ color: "#5f6670", fontSize: 12, fontWeight: "800", textAlign: "center" }}>
-          Your last check was {formatFreshness(state.lastRefreshAt)}. Traffic info by {formatTrafficProvider(state.trafficDataSource)}
+          {hasTrafficResults
+            ? `Your last check was ${formatFreshness(state.lastRefreshAt)}. Traffic info by ${formatTrafficProvider(state.trafficDataSource)}`
+            : `Tap refresh for current traffic. Traffic info by ${formatTrafficProvider(state.trafficDataSource)}`}
         </Text>
 
         {count > 0 && sortedDestinations.length === 0 ? (
@@ -125,9 +130,9 @@ export default function QuickScanScreen() {
           borderTopColor: "#e7e7e7",
           borderTopWidth: 1,
           flexShrink: 0,
-          paddingBottom: 8,
+          paddingBottom: Math.max(18, insets.bottom + 8),
           paddingHorizontal: 10,
-          paddingTop: 6,
+          paddingTop: 4,
         }}
       >
         <Pressable

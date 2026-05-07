@@ -98,8 +98,14 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
             borderWidth: 2,
             borderColor: "#ffffff",
             backgroundColor: dotColor,
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
+        >
+          {destination.trafficColor === "UNKNOWN" ? (
+            <Text style={{ color: "#5f6670", fontSize: ultraCompact ? 12 : 16, fontWeight: "900" }}>?</Text>
+          ) : null}
+        </View>
       </View>
     </Pressable>
   );
