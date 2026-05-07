@@ -112,3 +112,46 @@ export function mapAccountDestination(destination: AccountDestinationRow): Desti
     congestionSegments: [],
   };
 }
+
+export function mergeSavedDestinationsWithTraffic(
+  savedDestinations: Destination[],
+  currentDestinations: Destination[],
+) {
+  return savedDestinations.map((savedDestination) => {
+    const currentDestination = currentDestinations.find((destination) =>
+      destination.accountDestinationId
+        ? destination.accountDestinationId === savedDestination.accountDestinationId
+        : destination.id === savedDestination.id,
+    );
+
+    if (!currentDestination || !isSameRouteTarget(savedDestination, currentDestination)) {
+      return savedDestination;
+    }
+
+    return {
+      ...savedDestination,
+      status: currentDestination.status,
+      trafficColor: currentDestination.trafficColor,
+      delayMinutes: currentDestination.delayMinutes,
+      etaMinutes: currentDestination.etaMinutes,
+      normalMinutes: currentDestination.normalMinutes,
+      alternateRouteExists: currentDestination.alternateRouteExists,
+      congestionSegments: currentDestination.congestionSegments,
+      lastKnownGood: currentDestination.lastKnownGood,
+      warning: currentDestination.warning,
+      updatedAt: currentDestination.updatedAt,
+    };
+  });
+}
+
+function isSameRouteTarget(first: Destination, second: Destination) {
+  if (first.placeId || second.placeId) {
+    return first.placeId === second.placeId;
+  }
+
+  if (typeof first.latitude === "number" && typeof first.longitude === "number") {
+    return first.latitude === second.latitude && first.longitude === second.longitude;
+  }
+
+  return first.address === second.address;
+}

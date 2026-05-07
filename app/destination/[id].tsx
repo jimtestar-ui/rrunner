@@ -3,7 +3,12 @@ import { ColorPicker } from "@/components/color-picker";
 import { Field } from "@/components/field";
 import { PlaceSearch } from "@/components/place-search";
 import { PriorityToggle } from "@/components/priority-toggle";
-import { deleteAccountDestination, loadSavedAccountDestinations, saveAccountDestination } from "@/lib/account-destinations";
+import {
+  deleteAccountDestination,
+  loadSavedAccountDestinations,
+  mergeSavedDestinationsWithTraffic,
+  saveAccountDestination,
+} from "@/lib/account-destinations";
 import { CARD_COLORS, useAppStore } from "@/lib/app-store";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
@@ -62,7 +67,7 @@ export default function EditDestinationScreen() {
         return;
       }
 
-      replaceDestinations(destinations, userId);
+      replaceDestinations(mergeSavedDestinationsWithTraffic(destinations, state.destinations), userId);
       router.replace("/");
       return;
     }
@@ -97,7 +102,7 @@ export default function EditDestinationScreen() {
               return;
             }
 
-            replaceDestinations(destinations, userId);
+            replaceDestinations(mergeSavedDestinationsWithTraffic(destinations, state.destinations), userId);
             router.replace("/");
             return;
           }

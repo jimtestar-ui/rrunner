@@ -1,5 +1,9 @@
 import { BrandHeader } from "@/components/brand-header";
-import { loadSavedAccountDestinations, mapAccountDestination } from "@/lib/account-destinations";
+import {
+  loadSavedAccountDestinations,
+  mapAccountDestination,
+  mergeSavedDestinationsWithTraffic,
+} from "@/lib/account-destinations";
 import { useAppStore } from "@/lib/app-store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
@@ -120,7 +124,7 @@ export default function AccountScreen() {
       return;
     }
 
-    replaceDestinations(destinations, userId);
+    replaceDestinations(mergeSavedDestinationsWithTraffic(destinations, state.destinations), userId);
   }
 
   async function createSessionFromUrl(url: string) {
@@ -349,7 +353,7 @@ export default function AccountScreen() {
     }
 
     replaceDestinations(
-      (accountDestinations ?? []).map(mapAccountDestination),
+      mergeSavedDestinationsWithTraffic((accountDestinations ?? []).map(mapAccountDestination), state.destinations),
       session.user.id,
     );
     setSyncStatus(

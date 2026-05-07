@@ -7,6 +7,7 @@ import {
   getAccountLocationLimit,
   getSavedAccountDestinationCount,
   loadSavedAccountDestinations,
+  mergeSavedDestinationsWithTraffic,
   saveAccountDestination,
 } from "@/lib/account-destinations";
 import { CARD_COLORS, useAppStore } from "@/lib/app-store";
@@ -82,7 +83,7 @@ export default function AddDestinationScreen() {
         return;
       }
 
-      replaceDestinations(destinations, userId);
+      replaceDestinations(mergeSavedDestinationsWithTraffic(destinations, state.destinations), userId);
       router.replace("/");
       return;
     }
