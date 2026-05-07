@@ -97,6 +97,53 @@ async function computeRoute(origin, destination) {
     };
   }
 
+  const [trafficRoute, baselineRoute] = await Promise.all([
+    fetchRoute(origin, destination, "TRAFFIC_AWARE_OPTIMAL"),
+    fetchRoute(origin, destination, "TRAFFIC_UNAWARE"),
+  ]);
+
+  if (trafficRoute.error) {
+    return {
+      destinationId: destination.id,
+      hasSpeedReadingIntervals: false,
+      warning: trafficRoute.error,
+    };
+  }
+
+  if (!trafficRoute.route) {
+    return {
+      destinationId: destination.id,
+      hasSpeedReadingIntervals: false,
+      warning: "No route returned.",
+    };
+  }
+
+  const route = trafficRoute.route;
+  const durationSeconds = parseGoogleDuration(route.duration);
+  const staticDurationSeconds = parseGoogleDuration(route.staticDuration);
+  const baselineDurationSeconds = parseGoogleDuration(baselineRoute.route?.duration) || staticDurationSeconds;
+  const normalSeconds = baselineDurationSeconds || staticDurationSeconds;
+  const delayMinutes = Math.max(0, Math.round((durationSeconds - normalSeconds) / 60));
+  const intervals = route.travelAdvisory?.speedReadingIntervals;
+
+  return {
+    destinationId: destination.id,
+    etaMinutes: Math.round(durationSeconds / 60),
+    normalMinutes: Math.round(normalSeconds / 60),
+    delayMinutes,
+    alternateRouteExists: (trafficRoute.routeCount ?? 0) > 1,
+    hasSpeedReadingIntervals: Array.isArray(intervals) && intervals.length > 0,
+    congestionSegments: mapSpeedIntervals(intervals ?? []),
+    calculation: {
+      trafficSeconds: durationSeconds,
+      staticSeconds: staticDurationSeconds,
+      baselineSeconds: baselineDurationSeconds,
+    },
+  };
+}
+
+async function fetchRoute(origin, destination, routingPreference) {
+  const wantsTraffic = routingPreference !== "TRAFFIC_UNAWARE";
   const googleResponse = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
     method: "POST",
     headers: {
@@ -123,44 +170,22 @@ async function computeRoute(origin, destination) {
         },
       },
       travelMode: "DRIVE",
-      routingPreference: "TRAFFIC_AWARE_OPTIMAL",
-      computeAlternativeRoutes: true,
-      extraComputations: ["TRAFFIC_ON_POLYLINE"],
+      routingPreference,
+      computeAlternativeRoutes: wantsTraffic,
+      ...(wantsTraffic ? { extraComputations: ["TRAFFIC_ON_POLYLINE"] } : {}),
     }),
   });
 
   if (!googleResponse.ok) {
     return {
-      destinationId: destination.id,
-      hasSpeedReadingIntervals: false,
-      warning: `Google Routes error ${googleResponse.status}`,
+      error: `Google Routes error ${googleResponse.status}`,
     };
   }
 
   const data = await googleResponse.json();
-  const route = data.routes?.[0];
-
-  if (!route) {
-    return {
-      destinationId: destination.id,
-      hasSpeedReadingIntervals: false,
-      warning: "No route returned.",
-    };
-  }
-
-  const durationSeconds = parseGoogleDuration(route.duration);
-  const staticDurationSeconds = parseGoogleDuration(route.staticDuration);
-  const delayMinutes = Math.max(0, Math.round((durationSeconds - staticDurationSeconds) / 60));
-  const intervals = route.travelAdvisory?.speedReadingIntervals;
-
   return {
-    destinationId: destination.id,
-    etaMinutes: Math.round(durationSeconds / 60),
-    normalMinutes: Math.round(staticDurationSeconds / 60),
-    delayMinutes,
-    alternateRouteExists: (data.routes?.length ?? 0) > 1,
-    hasSpeedReadingIntervals: Array.isArray(intervals) && intervals.length > 0,
-    congestionSegments: mapSpeedIntervals(intervals ?? []),
+    route: data.routes?.[0],
+    routeCount: data.routes?.length ?? 0,
   };
 }
 
