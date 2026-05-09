@@ -16,9 +16,9 @@ export default function QuickScanScreen() {
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
   const count = state.destinations.length;
-  const compact = count > 10 || height < 760;
+  const compact = count > 8 || height < 760;
   const ultraCompact = count > 20 || height < 650;
-  const tileWidth = Math.max(150, Math.floor((width - 28) / 2));
+  const tileWidth = Math.max(150, Math.floor((width - 24) / 2));
   const sortedDestinations = useMemo(
     () =>
       [...state.destinations].sort((first, second) => {
@@ -58,20 +58,20 @@ export default function QuickScanScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+    <View style={{ flex: 1, backgroundColor: "#07080b" }}>
       <BrandHeader />
       <ScrollView
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ padding: 10, gap: 10, paddingBottom: 16 }}
+        contentContainerStyle={{ padding: 8, gap: 10, paddingBottom: 16 }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 2 }}>
           <Link href="/add-destination" asChild>
             <Pressable>
-              <Text style={{ color: "#0799b7", fontSize: 14, fontWeight: "900" }}>ADD LOCATION</Text>
+              <Text style={{ color: "#32d36b", fontSize: 13, fontWeight: "900" }}>ADD LOCATION</Text>
             </Pressable>
           </Link>
-          <Text selectable style={{ color: "#24282b", fontSize: 13, fontWeight: "800", textAlign: "right" }}>
+          <Text selectable style={{ color: "#ffffff", fontSize: 13, fontWeight: "900", textAlign: "right" }}>
             {count} / {state.plan.locationLimit} locations
           </Text>
         </View>
@@ -90,26 +90,32 @@ export default function QuickScanScreen() {
         </View>
 
         {count === 0 ? (
-          <View style={{ alignItems: "center", backgroundColor: "#f1f1f1", borderRadius: 8, gap: 10, padding: 18 }}>
-            <Text selectable style={{ color: "#24282b", fontSize: 18, fontWeight: "900", textAlign: "center" }}>
+          <View style={{ alignItems: "center", backgroundColor: "#171923", borderRadius: 8, gap: 10, padding: 18 }}>
+            <Text selectable style={{ color: "#ffffff", fontSize: 18, fontWeight: "900", textAlign: "center" }}>
               No saved locations yet
             </Text>
-            <Text selectable style={{ color: "#5f6670", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
+            <Text selectable style={{ color: "#b9bdc6", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
               Add a destination to start checking traffic before accepting a trip.
             </Text>
             <Link href="/add-destination" asChild>
-              <Pressable style={{ alignItems: "center", backgroundColor: "#0b9db9", borderRadius: 8, paddingHorizontal: 18, paddingVertical: 12 }}>
+              <Pressable style={{ alignItems: "center", backgroundColor: "#32d36b", borderRadius: 999, paddingHorizontal: 18, paddingVertical: 12 }}>
                 <Text style={{ color: "#ffffff", fontSize: 15, fontWeight: "900" }}>Add Location</Text>
               </Pressable>
             </Link>
           </View>
         ) : null}
 
-        <Text selectable style={{ color: "#5f6670", fontSize: 12, fontWeight: "800", textAlign: "center" }}>
+        <Text selectable style={{ color: "#8f94a0", fontSize: 12, fontWeight: "900", textAlign: "center" }}>
           {hasTrafficResults
             ? `Your last check was ${formatFreshness(state.lastRefreshAt)}. Traffic info by ${formatTrafficProvider(state.trafficDataSource)}`
             : `Tap refresh for current traffic. Traffic info by ${formatTrafficProvider(state.trafficDataSource)}`}
         </Text>
+
+        <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "center", paddingBottom: 4 }}>
+          <LegendDot color="#36df67" label="CLEAR" />
+          <LegendDot color="#ffd326" label="SLOW" />
+          <LegendDot color="#ff3a45" label="STOP" />
+        </View>
 
         {count > 0 && sortedDestinations.length === 0 ? (
           <Text selectable style={{ color: "#b42318", fontSize: 13, fontWeight: "800", textAlign: "center" }}>
@@ -126,13 +132,13 @@ export default function QuickScanScreen() {
       <View
         style={{
           alignItems: "center",
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e7e7e7",
+          backgroundColor: "#07080b",
+          borderTopColor: "#151821",
           borderTopWidth: 1,
           flexShrink: 0,
-          paddingBottom: Math.max(18, insets.bottom + 8),
+          paddingBottom: Math.max(18, insets.bottom + 7),
           paddingHorizontal: 10,
-          paddingTop: 4,
+          paddingTop: 8,
         }}
       >
         <Pressable
@@ -140,21 +146,33 @@ export default function QuickScanScreen() {
           disabled={refreshing}
           style={{
             alignItems: "center",
+            backgroundColor: "#32d36b",
+            borderRadius: 999,
             justifyContent: "center",
-            width: 96,
-            height: 56,
+            width: 58,
+            height: 58,
+            shadowColor: "#32d36b",
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.4,
+            shadowRadius: 12,
           }}
         >
           {refreshing ? (
-            <ActivityIndicator color="#00c875" size="large" />
+            <ActivityIndicator color="#08100b" size="large" />
           ) : (
-            <View style={{ alignItems: "center" }}>
-              <Ionicons name="car-sport" size={50} color="#00bf6f" />
-              <Ionicons name="refresh" size={28} color="#ffffff" style={{ position: "absolute", top: 14 }} />
-            </View>
+            <Ionicons name="refresh" size={31} color="#08210f" />
           )}
         </Pressable>
       </View>
+    </View>
+  );
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <View style={{ alignItems: "center", flexDirection: "row", gap: 4 }}>
+      <View style={{ backgroundColor: color, borderRadius: 5, height: 10, width: 10 }} />
+      <Text style={{ color: "#8f94a0", fontSize: 10, fontWeight: "900" }}>{label}</Text>
     </View>
   );
 }

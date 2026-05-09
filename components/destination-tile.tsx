@@ -3,10 +3,10 @@ import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
 const dotColors = {
-  GREEN: "#07c76d",
-  YELLOW: "#ffed39",
-  RED: "#ff3b30",
-  UNKNOWN: "#d5d8dc",
+  GREEN: "#36df67",
+  YELLOW: "#ffd326",
+  RED: "#ff3a45",
+  UNKNOWN: "#8b9199",
 };
 
 interface Props {
@@ -29,13 +29,42 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
       style={{
         width: tileWidth,
         backgroundColor,
+        borderColor: "rgba(255, 255, 255, 0.12)",
         borderRadius: 8,
+        borderWidth: 1,
         borderCurve: "continuous",
-        padding: ultraCompact ? 6 : 8,
-        minHeight: ultraCompact ? 58 : compact ? 82 : 106,
+        minHeight: ultraCompact ? 58 : compact ? 84 : 116,
+        overflow: "hidden",
+        padding: ultraCompact ? 8 : 10,
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
         justifyContent: "space-between",
       }}
     >
+      <View
+        pointerEvents="none"
+        style={{
+          backgroundColor: "rgba(255, 255, 255, 0.12)",
+          height: "42%",
+          left: 0,
+          position: "absolute",
+          right: 0,
+          top: 0,
+        }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          backgroundColor: "rgba(0, 0, 0, 0.16)",
+          bottom: 0,
+          height: "52%",
+          left: 0,
+          position: "absolute",
+          right: 0,
+        }}
+      />
       <View>
         <Text
           numberOfLines={1}
@@ -46,6 +75,9 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
             fontSize: ultraCompact ? 13 : compact ? 16 : 18,
             fontWeight: "900",
             lineHeight: ultraCompact ? 16 : compact ? 19 : 22,
+            textShadowColor: "rgba(0, 0, 0, 0.35)",
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 2,
             textTransform: "uppercase",
           }}
         >
@@ -56,13 +88,13 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
             numberOfLines={1}
             ellipsizeMode="clip"
             selectable
-            style={{ color: "#ffffff", fontSize: compact ? 12 : 14, lineHeight: compact ? 15 : 17 }}
+            style={{ color: "#ffffff", fontSize: compact ? 12 : 13, fontWeight: "700", lineHeight: compact ? 15 : 17 }}
           >
             {destination.name}
           </Text>
         ) : null}
         {reasonLabel ? (
-          <Text numberOfLines={1} selectable style={{ color: "#ffffff", fontSize: compact ? 11 : 12, fontWeight: "800" }}>
+          <Text numberOfLines={1} selectable style={{ color: "#ffffff", fontSize: compact ? 11 : 12, fontWeight: "900" }}>
             {reasonLabel}
           </Text>
         ) : null}
@@ -71,20 +103,22 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
         <View
           style={{
             borderColor: "#ffffff",
-            borderWidth: 2,
-            borderRadius: 12,
+            borderWidth: 1,
+            borderRadius: 999,
+            backgroundColor: "rgba(0, 0, 0, 0.32)",
+            minWidth: ultraCompact ? 76 : 86,
             paddingHorizontal: 9,
-            paddingVertical: 2,
-            minWidth: ultraCompact ? 76 : 100,
+            paddingVertical: 4,
           }}
         >
           <Text
             selectable
             style={{
               color: "#ffffff",
-              fontSize: ultraCompact ? 14 : 20,
+              fontSize: ultraCompact ? 13 : 14,
               fontWeight: "900",
               fontVariant: ["tabular-nums"],
+              lineHeight: ultraCompact ? 16 : 17,
             }}
           >
             {delay}
@@ -100,6 +134,10 @@ export function DestinationTile({ destination, compact, ultraCompact, tileWidth,
             backgroundColor: dotColor,
             alignItems: "center",
             justifyContent: "center",
+            shadowColor: "#000000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.35,
+            shadowRadius: 4,
           }}
         >
           {destination.trafficColor === "UNKNOWN" ? (
